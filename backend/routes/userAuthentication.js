@@ -1,7 +1,7 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import User from "../models/User";
+import User from "../models/User.js";
 
 const router = express.Router();
 
@@ -73,6 +73,7 @@ router.post("/login", async (req, res) => {
     httpOnly: true,
     sameSite: "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: "/",
   });
 
   res.status(200).json({ msg: "Login Successful" });
@@ -81,3 +82,32 @@ router.post("/login", async (req, res) => {
 router.post("/profile", (req, res) => {
   res.json({ user: req.user });
 });
+
+router.post("/refresh", async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!refreshToken) return res.status(401).json({ msg: "Logged out" });
+
+  try {
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+
+    const user = await User.findById(decoded.id).select("-password");
+    if (!user) return res.status(401).json({ msg: "User not found" });
+
+    const newAccessToken = createAccessToken(decoded.id);
+
+    res.cookie("newAccessToken", newAccessToken, {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 15 * 60 * 1000,
+      path: "/",
+    });
+
+    res.json({ user });
+  } catch (error) {
+    console.log(error);
+    res.status(403).json({ msg: "Invalid refresh token" });
+  }
+});
+
+export default router;
