@@ -5,6 +5,7 @@ import LecturerHome from "./pages/LecturerHome";
 import AdminHome from "./pages/AdminHome";
 import LecturerRegister from "./pages/LecturerRegister";
 import LecturerLogin from "./pages/LecturerLogin";
+import LecturerDashboard from "./pages/LecturerDashboard";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
       <Route path="/adminHome" element={<AdminHome />} />
       <Route path="/lecturerRegister" element={<LecturerRegister />} />
       <Route path="/lecturerLogin" element={<LecturerLogin />} />
+      <Route path="/lecturerDashboard" element={<LecturerDashboard />} />
     </Routes>
   );
 }

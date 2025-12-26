@@ -2,6 +2,7 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import userRoutes from "./routes/userAuthentication.js";
+import adminRoutes from "./routes/admin.js";
 import mongoose from "mongoose";
 import cors from "cors";
 
@@ -18,6 +19,7 @@ server.use(
 );
 
 server.use("/api/authentication", userRoutes);
+server.use("/api/admin", adminRoutes);
 
 mongoose
   .connect(process.env.MONGO_URL)

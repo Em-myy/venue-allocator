@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import User from "../models/User";
+import User from "../models/User.js";
 
 export const AuthMiddleware = async (req, res, next) => {
   const token = req.cookies.accessToken;
