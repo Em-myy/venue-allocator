@@ -18,7 +18,10 @@ axiosClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (originalRequest.url === "/api/authentication/refresh") {
+    if (
+      originalRequest.url === "/api/authentication/refresh" ||
+      originalRequest.url === "/api/admin/refresh"
+    ) {
       return Promise.reject(error);
     }
 
@@ -33,8 +36,11 @@ axiosClient.interceptors.response.use(
         const refreshResponse = await axiosRefresh.post(
           "/api/authentication/refresh"
         );
+        const adminRefreshResponse = await axiosRefresh.post(
+          "/api/admin/refresh"
+        );
 
-        if (refreshResponse.data?.user) {
+        if (refreshResponse.data?.user || adminRefreshResponse.data?.user) {
         }
         return axiosClient(originalRequest);
       } catch (refreshError) {

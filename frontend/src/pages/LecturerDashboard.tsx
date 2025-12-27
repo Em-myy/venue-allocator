@@ -3,12 +3,15 @@ import axiosClient from "../api/axios";
 
 const LecturerDashboard = () => {
   const [reason, setReason] = useState<string>("");
+  const [msg, setMsg] = useState<string>("");
+  const [submitted, setSubmitted] = useState<boolean>(false);
 
   const handleSubmit = async (event: React.ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
       const res = await axiosClient.post("/api/admin/request", { reason });
-      console.log(res.data);
+      setSubmitted(true);
+      setMsg(res.data);
       setReason("");
     } catch (error) {
       console.log(error);
@@ -33,6 +36,7 @@ const LecturerDashboard = () => {
           <button>Submit</button>
         </form>
       </div>
+      <div>{msg}</div>
     </div>
   );
 };
