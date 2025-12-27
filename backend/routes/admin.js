@@ -40,7 +40,7 @@ router.get("/request", AuthMiddleware, async (req, res) => {
   res.status(202).json({ requests });
 });
 
-router.patch("/approve/edit/:id", AuthMiddleware, async (req, res) => {
+router.patch("/approve/:id", AuthMiddleware, async (req, res) => {
   const id = req.params.id;
 
   try {
@@ -59,7 +59,7 @@ router.patch("/approve/edit/:id", AuthMiddleware, async (req, res) => {
   }
 });
 
-router.patch("/reject/edit/:id", AuthMiddleware, async (req, res) => {
+router.patch("/reject/:id", AuthMiddleware, async (req, res) => {
   const id = req.params.id;
 
   try {
