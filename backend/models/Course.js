@@ -1,10 +1,16 @@
 import mongoose from "mongoose";
 
 const courseSchema = new mongoose.Schema({
-  code: String,
-  title: String,
-  expectedStudents: Number,
-  lecturer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  code: { type: String, required: true, unique: true },
+  title: { type: String, required: true },
+  expectedStudents: { type: Number, required: true },
+  lecturer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  duration: { type: Number, default: 1 },
+  requiredResources: [String],
 });
 
 export default mongoose.model("Course", courseSchema);

@@ -3,8 +3,9 @@ import mongoose from "mongoose";
 const timetableSchema = new mongoose.Schema({
   course: { type: mongoose.Schema.Types.ObjectId, ref: "Course" },
   venue: { type: mongoose.Schema.Types.ObjectId, ref: "Venue" },
-  day: String,
-  time: String,
+  day: { type: String, required: true },
+  StartTime: { type: Number, required: true },
+  endTime: { type: Number, required: true },
 });
 
 export default mongoose.model("Timetable", timetableSchema);
