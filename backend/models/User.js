@@ -13,6 +13,10 @@ const userSchema = new mongoose.Schema(
       default: "none",
     },
     adminRequestReason: String,
+    preferences: {
+      preferredDays: [String],
+      preferredTime: [String],
+    },
   },
   { timestamps: true }
 );
