@@ -11,6 +11,16 @@ const isFeasible = (course, venue, day, time, currentSchedule) => {
     return false;
   }
 
+  if (course.requiredResources && course.requiredResources.length > 0) {
+    const hadAllResources = course.requiredResources.every((req) =>
+      venue.resources.includes(req)
+    );
+
+    if (!hadAllResources) {
+      return false;
+    }
+  }
+
   const venueBusy = currentSchedule.some(
     (t) =>
       t.venue.toString() === venue._id.toString() &&
