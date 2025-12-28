@@ -14,6 +14,7 @@ const createRefreshToken = (id) => {
 };
 
 router.post("/register", async (req, res) => {
+  try {
   const { username, email, password } = req.body;
 
   const existingUser = await User.findOne({ email });
@@ -42,10 +43,13 @@ router.post("/register", async (req, res) => {
     path: "/",
   });
 
-  res.status(200).json({ msg: "Registered Successful" });
+  res.status(200).json({ msg: "Registered Successful" });} catch (error) {
+    console.log(error);
+  }
 });
 
 router.post("/login", async (req, res) => {
+  try {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email });
@@ -76,7 +80,9 @@ router.post("/login", async (req, res) => {
     path: "/",
   });
 
-  res.status(200).json({ msg: "Login Successful" });
+  res.status(200).json({ msg: "Login Successful" });} catch(error) {
+    console.log(error);
+  }
 });
 
 router.post("/profile", (req, res) => {
@@ -109,5 +115,11 @@ router.post("/refresh", async (req, res) => {
     res.status(403).json({ msg: "Invalid refresh token" });
   }
 });
+
+router.post("/submitCourses", (req, res) => {
+  try {
+    const {code, title, expectedStudents, duration, requiredResources}
+  }
+})
 
 export default router;

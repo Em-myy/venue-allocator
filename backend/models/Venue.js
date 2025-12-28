@@ -4,7 +4,7 @@ const venueSchema = new mongoose.Schema({
     name: {type: String, required: true},
     capacity: {type: String, required: true},
     type: {type: String, enum: ["Laboratory", "Lecture Hall"], default: "Lecture Hall"},
-    resources: [String]
+    resources: { type: [String], default: []}
 });
 
 export default mongoose.model("Venue", venueSchema);

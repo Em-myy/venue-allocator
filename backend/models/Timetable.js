@@ -4,7 +4,7 @@ const timetableSchema = new mongoose.Schema({
   course: { type: mongoose.Schema.Types.ObjectId, ref: "Course" },
   venue: { type: mongoose.Schema.Types.ObjectId, ref: "Venue" },
   day: { type: String, required: true },
-  StartTime: { type: Number, required: true },
+  startTime: { type: Number, required: true },
   endTime: { type: Number, required: true },
 });
 

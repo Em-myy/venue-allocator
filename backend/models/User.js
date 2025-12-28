@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema(
     adminRequestReason: String,
     preferences: {
       preferredDays: [String],
-      preferredTime: [String],
+      preferredTimes: [String],
     },
   },
   { timestamps: true }

@@ -1,6 +1,7 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import { AuthMiddleware } from "../middleware/authMiddleware.js";
+import { GenerateTimetable } from "../controller/allocationController.js";
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 
@@ -180,6 +181,11 @@ router.post("/refresh", async (req, res) => {
     console.log(error);
     res.status(403).json({ msg: "Invalid refresh token" });
   }
+});
+
+router.post("/generate", AuthMiddleware, async (req, res) => {
+  const timetable = await GenerateTimetable();
+  res.json(timetable);
 });
 
 export default router;

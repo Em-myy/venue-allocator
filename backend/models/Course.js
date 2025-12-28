@@ -10,7 +10,7 @@ const courseSchema = new mongoose.Schema({
     required: true,
   },
   duration: { type: Number, default: 1 },
-  requiredResources: [String],
+  requiredResources: { type: [String], default: [] },
 });
 
 export default mongoose.model("Course", courseSchema);
