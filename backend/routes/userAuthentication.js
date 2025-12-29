@@ -151,4 +151,6 @@ router.post("/submitCourses", AuthMiddleware, async (req, res) => {
   }
 });
 
+router.get("/request", AuthMiddleware, async (req, res) => {});
+
 export default router;
