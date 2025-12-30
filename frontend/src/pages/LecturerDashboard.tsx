@@ -15,7 +15,13 @@ interface userType {
   role: string;
   adminRequestStatus: string;
   adminRequestReason: string;
-  preferences: { preferredDays: string; preferredTimes: string };
+  preferredDays: string;
+  preferredTimes: string;
+}
+
+interface preferencesType {
+  preferredDays: string[] | null;
+  preferredTimes: string[] | null;
 }
 
 const LecturerDashboard = () => {
@@ -34,10 +40,12 @@ const LecturerDashboard = () => {
     role: "",
     adminRequestStatus: "",
     adminRequestReason: "",
-    preferences: {
-      preferredDays: "",
-      preferredTimes: "",
-    },
+    preferredDays: "",
+    preferredTimes: "",
+  });
+  const [preferencesForm, setPreferencesForm] = useState<preferencesType>({
+    preferredDays: null,
+    preferredTimes: null,
   });
 
   const handleRequestSubmit = async (
@@ -98,10 +106,55 @@ const LecturerDashboard = () => {
     }
   };
 
+  const handleTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const val = event.target.value;
+
+    if (val === "") {
+      return setPreferencesForm({ ...preferencesForm, preferredTimes: null });
+    } else {
+      setPreferencesForm({
+        ...preferencesForm,
+        preferredTimes: val.split(","),
+      });
+    }
+  };
+
+  const handleDayChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const val = event.target.value;
+
+    if (val === "") {
+      return setPreferencesForm({ ...preferencesForm, preferredDays: null });
+    } else {
+      setPreferencesForm({ ...preferencesForm, preferredDays: val.split(",") });
+    }
+  };
+
+  const handlePreferencesSubmit = async (
+    event: React.ChangeEvent<HTMLFormElement>
+  ) => {
+    event.preventDefault();
+    try {
+      const res = await axiosClient.post(
+        "/api/authentication/submitPreferences",
+        preferencesForm
+      );
+      console.log(res.data.msg);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
-    const getDetails = async () => {
-      const res = await axiosClient.get("/api/authentication/profile");
-    };
+    try {
+      const getDetails = async () => {
+        const res = await axiosClient.get("/api/authentication/profile");
+        console.log(res.data);
+        setUserData(res.data);
+      };
+      getDetails();
+    } catch (error) {
+      console.log(error);
+    }
   }, []);
 
   return (
@@ -184,6 +237,51 @@ const LecturerDashboard = () => {
           </div>
           <button type="submit">Submit</button>
         </form>
+      </div>
+
+      <div>
+        <h1>Submit Preferences</h1>
+        <form onSubmit={handlePreferencesSubmit}>
+          <div>
+            <div>
+              <label>Preferred Day</label>
+              <input
+                type="text"
+                placeholder="Enter the day in full name"
+                name="preferredDays"
+                value={
+                  preferencesForm.preferredDays
+                    ? preferencesForm.preferredDays.join(",")
+                    : ""
+                }
+                onChange={handleDayChange}
+              />
+            </div>
+            <div>
+              <label>Preferred Time</label>
+              <input
+                type="text"
+                placeholder="Enter the time in digit"
+                name="preferredTimes"
+                value={
+                  preferencesForm.preferredTimes
+                    ? preferencesForm.preferredTimes.join(",")
+                    : ""
+                }
+                onChange={handleTimeChange}
+              />
+            </div>
+            <button type="submit">Submit</button>
+          </div>
+        </form>
+      </div>
+      <div>
+        <div>{userData.name}</div>
+        <div>{userData.role}</div>
+        <div>{userData.adminRequestReason}</div>
+        <div>{userData.adminRequestStatus}</div>
+        <div>{userData.preferredDays}</div>
+        <div>{userData.preferredTimes}</div>
       </div>
     </div>
   );

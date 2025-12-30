@@ -91,12 +91,20 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.get("/profile", AuthMiddleware, (req, res) => {
+router.get("/profile", AuthMiddleware, async (req, res) => {
   const lecturerId = req.user.id;
 
-  const user = User.findById({ lecturerId });
+  const user = await User.findById(lecturerId);
 
-  res.status(200).send({ user });
+  res.status(200).json({
+    id: user._id,
+    name: user.name,
+    role: user.role,
+    adminRequestStatus: user.adminRequestStatus,
+    adminRequestReason: user.adminRequestReason,
+    preferredDays: user.preferences.preferredDays,
+    preferredTime: user.preferences.preferredTimes,
+  });
 });
 
 router.post("/refresh", async (req, res) => {
@@ -123,6 +131,24 @@ router.post("/refresh", async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(403).json({ msg: "Invalid refresh token" });
+  }
+});
+
+router.post("/submitPreferences", AuthMiddleware, async (req, res) => {
+  const { preferredTimes, preferredDays } = req.body;
+  try {
+    const lecturerId = req.user.id;
+
+    const user = await User.findById(lecturerId);
+
+    user.preferences.preferredTimes = preferredTimes;
+    user.preferences.preferredDays = preferredDays;
+
+    await req.user.save();
+
+    res.status(202).json({ msg: "Preferences submitted successfully" });
+  } catch (error) {
+    console.log(error);
   }
 });
 
