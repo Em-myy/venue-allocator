@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axiosClient from "../api/axios";
 
 interface courseType {
@@ -7,6 +7,15 @@ interface courseType {
   expectedStudents: number | null;
   duration: number | null;
   requiredResources: string[] | null;
+}
+
+interface userType {
+  name: string;
+  email: string;
+  role: string;
+  adminRequestStatus: string;
+  adminRequestReason: string;
+  preferences: { preferredDays: string; preferredTimes: string };
 }
 
 const LecturerDashboard = () => {
@@ -18,6 +27,17 @@ const LecturerDashboard = () => {
     expectedStudents: null,
     duration: null,
     requiredResources: null,
+  });
+  const [userData, setUserData] = useState<userType>({
+    name: "",
+    email: "",
+    role: "",
+    adminRequestStatus: "",
+    adminRequestReason: "",
+    preferences: {
+      preferredDays: "",
+      preferredTimes: "",
+    },
   });
 
   const handleRequestSubmit = async (
@@ -77,6 +97,12 @@ const LecturerDashboard = () => {
       console.log(error);
     }
   };
+
+  useEffect(() => {
+    const getDetails = async () => {
+      const res = await axiosClient.get("/api/authentication/profile");
+    };
+  }, []);
 
   return (
     <div>

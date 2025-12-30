@@ -91,8 +91,12 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.post("/profile", (req, res) => {
-  res.json({ user: req.user });
+router.get("/profile", AuthMiddleware, (req, res) => {
+  const lecturerId = req.user.id;
+
+  const user = User.findById({ lecturerId });
+
+  res.status(200).send({ user });
 });
 
 router.post("/refresh", async (req, res) => {
@@ -150,7 +154,5 @@ router.post("/submitCourses", AuthMiddleware, async (req, res) => {
     console.log(error);
   }
 });
-
-router.get("/request", AuthMiddleware, async (req, res) => {});
 
 export default router;
