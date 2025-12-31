@@ -137,14 +137,22 @@ router.post("/refresh", async (req, res) => {
 router.post("/submitPreferences", AuthMiddleware, async (req, res) => {
   const { preferredTimes, preferredDays } = req.body;
   try {
-    const lecturerId = req.user.id;
+    const userId = req.user._id;
 
-    const user = await User.findById(lecturerId);
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        preferences: {
+          preferredDays: preferredDays,
+          preferredTimes: preferredTimes,
+        },
+      },
+      { new: true }
+    );
 
-    user.preferences.preferredTimes = preferredTimes;
-    user.preferences.preferredDays = preferredDays;
-
-    await req.user.save();
+    if (!updatedUser) {
+      return res.status(404).json({ msg: "User not found" });
+    }
 
     res.status(202).json({ msg: "Preferences submitted successfully" });
   } catch (error) {

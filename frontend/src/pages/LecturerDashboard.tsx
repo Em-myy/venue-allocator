@@ -112,9 +112,10 @@ const LecturerDashboard = () => {
     if (val === "") {
       return setPreferencesForm({ ...preferencesForm, preferredTimes: null });
     } else {
+      const timeArray = val.split(",").map((t) => t.trim());
       setPreferencesForm({
         ...preferencesForm,
-        preferredTimes: val.split(","),
+        preferredTimes: timeArray,
       });
     }
   };
@@ -125,7 +126,8 @@ const LecturerDashboard = () => {
     if (val === "") {
       return setPreferencesForm({ ...preferencesForm, preferredDays: null });
     } else {
-      setPreferencesForm({ ...preferencesForm, preferredDays: val.split(",") });
+      const dayArray = val.split(",").map((t) => t.trim());
+      setPreferencesForm({ ...preferencesForm, preferredDays: dayArray });
     }
   };
 
