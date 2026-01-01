@@ -16,7 +16,7 @@ interface userType {
   adminRequestStatus: string;
   adminRequestReason: string;
   preferredDays: string;
-  preferredTimes: string;
+  preferredTime: string;
 }
 
 interface preferencesType {
@@ -41,7 +41,7 @@ const LecturerDashboard = () => {
     adminRequestStatus: "",
     adminRequestReason: "",
     preferredDays: "",
-    preferredTimes: "",
+    preferredTime: "",
   });
   const [preferencesForm, setPreferencesForm] = useState<preferencesType>({
     preferredDays: null,
@@ -54,7 +54,7 @@ const LecturerDashboard = () => {
     event.preventDefault();
     try {
       const res = await axiosClient.post("/api/admin/request", { reason });
-      setMsg(res.data);
+      setMsg(res.data.msg);
       setReason("");
     } catch (error) {
       console.log(error);
@@ -162,22 +162,25 @@ const LecturerDashboard = () => {
   return (
     <div>
       <div>Lecturer dashboard</div>
-      <div>
-        <form onSubmit={handleRequestSubmit}>
-          <div>
-            <label>Admin Reason</label>
-            <input
-              type="text"
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                setReason(event.target.value)
-              }
-              value={reason}
-              name="reason"
-            />
-          </div>
-          <button>Submit</button>
-        </form>
-      </div>
+      {userData.adminRequestStatus === "pending" ||
+      userData.adminRequestStatus === "approved" ? null : (
+        <div>
+          <form onSubmit={handleRequestSubmit}>
+            <div>
+              <label>Admin Reason</label>
+              <input
+                type="text"
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                  setReason(event.target.value)
+                }
+                value={reason}
+                name="reason"
+              />
+            </div>
+            <button>Submit</button>
+          </form>
+        </div>
+      )}
       <div>{msg}</div>
       <div>
         <form onSubmit={handleCoursesSubmit}>
@@ -283,7 +286,7 @@ const LecturerDashboard = () => {
         <div>{userData.adminRequestReason}</div>
         <div>{userData.adminRequestStatus}</div>
         <div>{userData.preferredDays}</div>
-        <div>{userData.preferredTimes}</div>
+        <div>{userData.preferredTime}</div>
       </div>
     </div>
   );
