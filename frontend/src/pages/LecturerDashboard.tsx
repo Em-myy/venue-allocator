@@ -136,7 +136,7 @@ const LecturerDashboard = () => {
   ) => {
     event.preventDefault();
     try {
-      const res = await axiosClient.post(
+      const res = await axiosClient.patch(
         "/api/authentication/submitPreferences",
         preferencesForm
       );

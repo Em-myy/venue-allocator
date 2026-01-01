@@ -134,7 +134,7 @@ router.post("/refresh", async (req, res) => {
   }
 });
 
-router.post("/submitPreferences", AuthMiddleware, async (req, res) => {
+router.patch("/submitPreferences", AuthMiddleware, async (req, res) => {
   const { preferredTimes, preferredDays } = req.body;
   try {
     const userId = req.user._id;
