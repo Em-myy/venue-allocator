@@ -5,6 +5,7 @@ import { GenerateTimetable } from "../controller/allocationController.js";
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import Course from "../models/Course.js";
+import Venue from "../models/Venue.js";
 
 const router = express.Router();
 
@@ -172,12 +173,36 @@ router.get("/getCourses", async (req, res) => {
   }
 });
 
-router.get("/generate", async (req, res) => {
+router.post("/createVenue", AuthMiddleware, async (req, res) => {
   try {
-    const timetable = await GenerateTimetable();
-    res.json({ timetable });
+    const { name, capacity, type, resources } = req.body;
+
+    const existingVenue = await Venue.findOne({ name });
+
+    if (existingVenue) {
+      return res.status(401).json({ msg: "Venue already exists" });
+    }
+
+    const venue = new Venue({ name, capacity, type, resources });
+    await venue.save();
+
+    res.status(201).json({ venue });
   } catch (error) {
     console.log(error);
+  }
+});
+
+router.get("/generate", async (req, res) => {
+  try {
+    const result = await GenerateTimetable();
+    res.status(200).json({
+      msg: "Timetable created",
+      timetable: result.generated,
+      unallocated: result.unallocated,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ msg: "Failed to create timetables" });
   }
 });
 

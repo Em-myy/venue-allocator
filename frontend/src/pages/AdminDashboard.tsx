@@ -21,10 +21,23 @@ interface courseType {
   };
 }
 
+interface venueType {
+  name: string;
+  capacity: string;
+  type: string;
+  resources: string[];
+}
+
 const AdminDashboard = () => {
   const [candidateData, setCandidateData] = useState<AdminRequestType[]>([]);
   const [msg, setMsg] = useState<string>("");
   const [courseData, setCourseData] = useState<courseType[]>([]);
+  const [formData, setFormData] = useState<venueType>({
+    name: "",
+    capacity: "",
+    type: "",
+    resources: [],
+  });
 
   const handleApprove = async (id: string) => {
     try {
@@ -39,6 +52,35 @@ const AdminDashboard = () => {
     try {
       const res = await axiosClient.patch(`/api/admin/reject/${id}`);
       setMsg(res.data.msg);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [event.target.name]: event.target.value });
+  };
+
+  const handleResourcesChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const val = event.target.value;
+
+    if (val === "") {
+      return setFormData({ ...formData, resources: [] });
+    } else {
+      const resourcesArray = val.split(",").map((t) => t.trim());
+      setFormData({ ...formData, resources: resourcesArray });
+    }
+  };
+
+  const handleFormSubmit = async (
+    event: React.ChangeEvent<HTMLFormElement>
+  ) => {
+    event.preventDefault();
+    try {
+      const res = await axiosClient.post("/api/admin/createVenue", formData);
+      console.log(res.data.msg);
     } catch (error) {
       console.log(error);
     }
@@ -95,6 +137,15 @@ const AdminDashboard = () => {
           </button>
         </div>
       ))}
+
+      <div>
+        <form>
+          <div>
+            <label>Name: </label>
+            <input type="text" />
+          </div>
+        </form>
+      </div>
 
       <div>
         {courseData.map((index) => (
