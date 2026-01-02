@@ -6,6 +6,7 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import Course from "../models/Course.js";
 import Venue from "../models/Venue.js";
+import Timetable from "../models/Timetable.js";
 
 const router = express.Router();
 
@@ -192,6 +193,15 @@ router.post("/createVenue", AuthMiddleware, async (req, res) => {
   }
 });
 
+router.get("/getVenues", AuthMiddleware, async (req, res) => {
+  try {
+    const venues = await Venue.find();
+    res.status(201).json({ venues });
+  } catch (error) {
+    console.log(error);
+  }
+});
+
 router.get("/generate", async (req, res) => {
   try {
     const result = await GenerateTimetable();
@@ -203,6 +213,17 @@ router.get("/generate", async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ msg: "Failed to create timetables" });
+  }
+});
+
+router.get("/getTimetable", async (req, res) => {
+  try {
+    const timetable = await Timetable.find()
+      .populate("course", "title code")
+      .populate("venue", "name");
+    res.status(200).json({ timetable });
+  } catch (error) {
+    console.log(error);
   }
 });
 

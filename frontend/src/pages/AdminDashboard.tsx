@@ -22,22 +22,46 @@ interface courseType {
 }
 
 interface venueType {
+  _id: string;
   name: string;
   capacity: string;
   type: string;
   resources: string[];
 }
 
+interface FormType {
+  name: string;
+  capacity: string;
+  type: string;
+  resources: string[];
+}
+
+interface timetableType {
+  _id: string;
+  day: string;
+  startTime: number;
+  endTime: number;
+  course: {
+    title: string;
+    code: string;
+  };
+  venue: {
+    name: string;
+  };
+}
+
 const AdminDashboard = () => {
   const [candidateData, setCandidateData] = useState<AdminRequestType[]>([]);
   const [msg, setMsg] = useState<string>("");
   const [courseData, setCourseData] = useState<courseType[]>([]);
-  const [formData, setFormData] = useState<venueType>({
+  const [formData, setFormData] = useState<FormType>({
     name: "",
     capacity: "",
     type: "",
     resources: [],
   });
+  const [venueData, setVenueData] = useState<venueType[]>([]);
+  const [timetableData, setTimetableData] = useState<timetableType[]>([]);
 
   const handleApprove = async (id: string) => {
     try {
@@ -80,6 +104,7 @@ const AdminDashboard = () => {
     event.preventDefault();
     try {
       const res = await axiosClient.post("/api/admin/createVenue", formData);
+      console.log("Venue created successfully");
       console.log(res.data.msg);
     } catch (error) {
       console.log(error);
@@ -119,6 +144,30 @@ const AdminDashboard = () => {
     handleCourses();
   }, []);
 
+  useEffect(() => {
+    const handleVenues = async () => {
+      try {
+        const res = await axiosClient.get("/api/admin/getVenues");
+        setVenueData(res.data.venues);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    handleVenues();
+  }, []);
+
+  useEffect(() => {
+    const handleTimetable = async () => {
+      try {
+        const res = await axiosClient.get("/api/admin/getTimetable");
+        setTimetableData(res.data.timetable);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    handleTimetable();
+  }, []);
+
   return (
     <div>
       <div>Admin Dashboard</div>
@@ -139,11 +188,48 @@ const AdminDashboard = () => {
       ))}
 
       <div>
-        <form>
+        <form onSubmit={handleFormSubmit}>
           <div>
             <label>Name: </label>
-            <input type="text" />
+            <input
+              type="text"
+              placeholder="Venue name"
+              name="name"
+              value={formData.name}
+              onChange={handleFormChange}
+            />
           </div>
+          <div>
+            <label>Capacity: </label>
+            <input
+              type="text"
+              placeholder="Capacity"
+              name="capacity"
+              value={formData.capacity}
+              onChange={handleFormChange}
+            />
+          </div>
+          <div>
+            <label>Type: </label>
+            <input
+              type="text"
+              placeholder="Venue type"
+              name="type"
+              value={formData.type}
+              onChange={handleFormChange}
+            />
+          </div>
+          <div>
+            <label>Resources: </label>
+            <input
+              type="text"
+              placeholder="Resources"
+              name="resources"
+              value={formData.resources}
+              onChange={handleResourcesChange}
+            />
+          </div>
+          <button type="submit">Create Venue</button>
         </form>
       </div>
 
@@ -160,7 +246,31 @@ const AdminDashboard = () => {
         ))}
       </div>
 
+      <div>
+        {venueData.map((index) => (
+          <div key={index._id}>
+            <div>{index.name}</div>
+            <div>{index.capacity}</div>
+            <div>{index.type}</div>
+            <div>{index.resources}</div>
+          </div>
+        ))}
+      </div>
+
       <button onClick={handleTimetable}>Create Timetable</button>
+
+      <div>
+        {timetableData.map((index) => (
+          <div key={index._id}>
+            <div>{index.course.title}</div>
+            <div>{index.course.code}</div>
+            <div>{index.venue.name}</div>
+            <div>{index.day}</div>
+            <div>{index.startTime}</div>
+            <div>{index.endTime}</div>
+          </div>
+        ))}
+      </div>
 
       <div>{msg}</div>
     </div>
