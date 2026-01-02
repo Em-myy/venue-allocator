@@ -62,7 +62,7 @@ router.post("/login", async (req, res) => {
         msg: "User not registered..... Please go and register",
       });
 
-    const isMatch = bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (isMatch === false) {
       return res.status(401).json({ msg: "Invalid password" });

@@ -79,17 +79,21 @@ router.patch("/reject/:id", AuthMiddleware, async (req, res) => {
   }
 });
 
-router.post("/login", AuthMiddleware, async (req, res) => {
+router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
     const user = await User.findOne({ email });
 
+    if (!user) {
+      return res.status(401).json({ msg: "User does not exist" });
+    }
+
     if (user.role !== "admin") {
       return res.status(401).json({ msg: "Not an admin" });
     }
 
-    const isMatch = bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (isMatch === false) {
       return res.status(401).json({ msg: "Invalid password" });
