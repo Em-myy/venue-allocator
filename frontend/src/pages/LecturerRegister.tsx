@@ -2,14 +2,14 @@ import { useState } from "react";
 import axiosClient from "../api/axios";
 
 interface formType {
-  name: string;
+  username: string;
   email: string;
   password: string;
 }
 
 const LecturerRegister = () => {
   const [formData, setFormData] = useState<formType>({
-    name: "",
+    username: "",
     email: "",
     password: "",
   });
@@ -45,8 +45,8 @@ const LecturerRegister = () => {
               <input
                 type="text"
                 placeholder="Lecturer Username"
-                value={formData.name}
-                name="name"
+                value={formData.username}
+                name="username"
                 onChange={handleChange}
               />
             </div>

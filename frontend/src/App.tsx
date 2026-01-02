@@ -7,6 +7,7 @@ import LecturerRegister from "./pages/LecturerRegister";
 import LecturerLogin from "./pages/LecturerLogin";
 import LecturerDashboard from "./pages/LecturerDashboard";
 import AdminLogin from "./pages/AdminLogin";
+import AdminRegister from "./pages/AdminRegister";
 import AdminDashboard from "./pages/AdminDashboard";
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
       <Route path="/lecturerDashboard" element={<LecturerDashboard />} />
       <Route path="/adminLogin" element={<AdminLogin />} />
       <Route path="/adminDashboard" element={<AdminDashboard />} />
+      <Route path="/adminRegister" element={<AdminRegister />} />
     </Routes>
   );
 }

@@ -9,9 +9,22 @@ interface AdminRequestType {
   adminRequestStatus: "none" | "pending" | "approved" | "rejected";
 }
 
+interface courseType {
+  _id: string;
+  code: string;
+  title: string;
+  expectedStudents: number | null;
+  duration: number | null;
+  requiredResources: string[] | null;
+  lecturer: {
+    username: string;
+  };
+}
+
 const AdminDashboard = () => {
   const [candidateData, setCandidateData] = useState<AdminRequestType[]>([]);
   const [msg, setMsg] = useState<string>("");
+  const [courseData, setCourseData] = useState<courseType[]>([]);
 
   const handleApprove = async (id: string) => {
     try {
@@ -31,6 +44,15 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleTimetable = async () => {
+    try {
+      const res = await axiosClient.get("/api/admin/generate");
+      console.log(res.data.timetable);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     const handleCandidates = async () => {
       try {
@@ -42,6 +64,20 @@ const AdminDashboard = () => {
     };
     handleCandidates();
   }, []);
+
+  useEffect(() => {
+    const handleCourses = async () => {
+      try {
+        const res = await axiosClient.get("/api/admin/getCourses");
+        console.log(res.data.courses);
+        setCourseData(res.data.courses);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    handleCourses();
+  }, []);
+
   return (
     <div>
       <div>Admin Dashboard</div>
@@ -60,6 +96,22 @@ const AdminDashboard = () => {
           </button>
         </div>
       ))}
+
+      <div>
+        {courseData.map((index) => (
+          <div key={index._id}>
+            <div>{index.code}</div>
+            <div>{index.duration}</div>
+            <div>{index.expectedStudents}</div>
+            <div>{index.title}</div>
+            <div>{index.requiredResources}</div>
+            <div>{index.lecturer.username}</div>
+          </div>
+        ))}
+      </div>
+
+      <button onClick={handleTimetable}>Create Timetable</button>
+
       <div>{msg}</div>
     </div>
   );

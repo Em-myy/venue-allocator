@@ -150,7 +150,6 @@ const LecturerDashboard = () => {
     try {
       const getDetails = async () => {
         const res = await axiosClient.get("/api/authentication/profile");
-        console.log(res.data);
         setUserData(res.data);
       };
       getDetails();

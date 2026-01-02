@@ -4,6 +4,7 @@ import { AuthMiddleware } from "../middleware/authMiddleware.js";
 import { GenerateTimetable } from "../controller/allocationController.js";
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
+import Course from "../models/Course.js";
 
 const router = express.Router();
 
@@ -183,9 +184,19 @@ router.post("/refresh", async (req, res) => {
   }
 });
 
-router.post("/generate", AuthMiddleware, async (req, res) => {
+router.get("/getCourses", async (req, res) => {
+  try {
+    const courses = await Course.find().populate("lecturer", "username");
+
+    res.status(200).json({ courses });
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+router.post("/generate", async (req, res) => {
   const timetable = await GenerateTimetable();
-  res.json(timetable);
+  res.json({ timetable });
 });
 
 export default router;
