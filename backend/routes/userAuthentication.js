@@ -118,9 +118,9 @@ router.post("/refresh", async (req, res) => {
     const user = await User.findById(decoded.id).select("-password");
     if (!user) return res.status(401).json({ msg: "User not found" });
 
-    const newAccessToken = createAccessToken(decoded.id);
+    const newAccessToken = createAccessToken(user._id);
 
-    res.cookie("newAccessToken", newAccessToken, {
+    res.cookie("accessToken", newAccessToken, {
       httpOnly: true,
       sameSite: "lax",
       maxAge: 15 * 60 * 1000,

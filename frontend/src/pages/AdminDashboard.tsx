@@ -69,7 +69,6 @@ const AdminDashboard = () => {
     const handleCourses = async () => {
       try {
         const res = await axiosClient.get("/api/admin/getCourses");
-        console.log(res.data.courses);
         setCourseData(res.data.courses);
       } catch (error) {
         console.log(error);

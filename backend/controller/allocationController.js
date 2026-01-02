@@ -110,17 +110,8 @@ export const GenerateTimetable = async (req, res) => {
     const finalSchedule = schedule.map(({ lecturerId, ...rest }) => rest);
     await Timetable.insertMany(finalSchedule);
 
-    res.status(200).json({
-      success: true,
-      allocated: schedule.length,
-      unallocated: unallocated,
-      message:
-        unallocated.length > 0
-          ? `Completed with conflicts: ${unallocated.join(", ")}`
-          : "Timetable generated successfully",
-    });
+    console.log("Timetable generated successfully");
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: error.message });
   }
 };

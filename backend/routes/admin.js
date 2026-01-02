@@ -162,32 +162,6 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/refresh", async (req, res) => {
-  const refreshToken = req.cookies.refreshToken;
-
-  if (!refreshToken) return res.status(401).json({ msg: "Logged out" });
-
-  try {
-    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-
-    const user = await User.findById(decoded.id).select("-password");
-    if (!user) return res.status(401).json({ msg: "User not found" });
-
-    const newAccessToken = createAccessToken(decoded.id);
-    res.cookie("newAccessToken", newAccessToken, {
-      httpOnly: true,
-      sameSite: "lax",
-      maxAge: 15 * 60 * 1000,
-      path: "/",
-    });
-
-    res.status(201).json({ user });
-  } catch (error) {
-    console.log(error);
-    res.status(403).json({ msg: "Invalid refresh token" });
-  }
-});
-
 router.get("/getCourses", async (req, res) => {
   try {
     const courses = await Course.find().populate("lecturer", "username");
@@ -198,9 +172,13 @@ router.get("/getCourses", async (req, res) => {
   }
 });
 
-router.post("/generate", async (req, res) => {
-  const timetable = await GenerateTimetable();
-  res.json({ timetable });
+router.get("/generate", async (req, res) => {
+  try {
+    const timetable = await GenerateTimetable();
+    res.json({ timetable });
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 export default router;
