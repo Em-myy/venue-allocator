@@ -15,13 +15,13 @@ interface userType {
   role: string;
   adminRequestStatus: string;
   adminRequestReason: string;
-  preferredDays: string;
-  preferredTime: string;
+  preferredDays: string[];
+  preferredTime: string[];
 }
 
 interface preferencesType {
-  preferredDays: string[] | null;
-  preferredTimes: string[] | null;
+  preferredDays: string[];
+  preferredTimes: string[];
 }
 
 const LecturerDashboard = () => {
@@ -40,12 +40,12 @@ const LecturerDashboard = () => {
     role: "",
     adminRequestStatus: "",
     adminRequestReason: "",
-    preferredDays: "",
-    preferredTime: "",
+    preferredDays: [],
+    preferredTime: [],
   });
   const [preferencesForm, setPreferencesForm] = useState<preferencesType>({
-    preferredDays: null,
-    preferredTimes: null,
+    preferredDays: [],
+    preferredTimes: [],
   });
 
   const handleRequestSubmit = async (
@@ -110,7 +110,7 @@ const LecturerDashboard = () => {
     const val = event.target.value;
 
     if (val === "") {
-      return setPreferencesForm({ ...preferencesForm, preferredTimes: null });
+      return setPreferencesForm({ ...preferencesForm, preferredTimes: [] });
     } else {
       const timeArray = val.split(",").map((t) => t.trim());
       setPreferencesForm({
@@ -124,7 +124,7 @@ const LecturerDashboard = () => {
     const val = event.target.value;
 
     if (val === "") {
-      return setPreferencesForm({ ...preferencesForm, preferredDays: null });
+      return setPreferencesForm({ ...preferencesForm, preferredDays: [] });
     } else {
       const dayArray = val.split(",").map((t) => t.trim());
       setPreferencesForm({ ...preferencesForm, preferredDays: dayArray });
@@ -285,8 +285,8 @@ const LecturerDashboard = () => {
         <div>{userData.role}</div>
         <div>{userData.adminRequestReason}</div>
         <div>{userData.adminRequestStatus}</div>
-        <div>{userData.preferredDays}</div>
-        <div>{userData.preferredTime}</div>
+        <div>{userData.preferredDays.join(", ")}</div>
+        <div>{userData.preferredTime.join(", ")}</div>
       </div>
     </div>
   );

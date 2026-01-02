@@ -142,9 +142,9 @@ router.patch("/submitPreferences", AuthMiddleware, async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       {
-        preferences: {
-          preferredDays: preferredDays,
-          preferredTimes: preferredTimes,
+        $addToSet: {
+          "preferences.preferredDays": { $each: preferredDays },
+          "preferences.preferredTimes": { $each: preferredTimes },
         },
       },
       { new: true }
