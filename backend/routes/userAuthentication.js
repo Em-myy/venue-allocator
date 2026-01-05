@@ -127,7 +127,15 @@ router.post("/refresh", async (req, res) => {
       path: "/",
     });
 
-    res.json({ user });
+    res.json({
+      id: user._id,
+      name: user.name,
+      role: user.role,
+      adminRequestStatus: user.adminRequestStatus,
+      adminRequestReason: user.adminRequestReason,
+      preferredDays: user.preferences.preferredDays,
+      preferredTime: user.preferences.preferredTimes,
+    });
   } catch (error) {
     console.log(error);
     res.status(403).json({ msg: "Invalid refresh token" });
