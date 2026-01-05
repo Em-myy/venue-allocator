@@ -5,7 +5,7 @@ interface AuthContextType {
   logout: () => void;
   loading: boolean;
 }
-aaaaaaa
+
 interface AuthProviderType {
   children: ReactNode;
 }
