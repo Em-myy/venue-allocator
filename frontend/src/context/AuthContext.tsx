@@ -1,4 +1,10 @@
-import { createContext, useEffect, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import axiosClient from "../api/axios";
 
 interface AuthContextType {
@@ -50,4 +56,26 @@ export const AuthProvider = ({ children }: AuthProviderType) => {
       window.removeEventListener("logout", handleLogout);
     };
   }, []);
+
+  const logout = async () => {
+    await axiosClient.post("/api/authentication/logout");
+    setUser(null);
+    setIsLoggedOut(true);
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, logout, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+
+  if (!context) {
+    throw new Error("Error occurred in AuthContext");
+  }
+
+  return context;
 };

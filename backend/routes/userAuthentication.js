@@ -197,4 +197,20 @@ router.post("/submitCourses", AuthMiddleware, async (req, res) => {
   }
 });
 
+router.post("/logout", async (req, res) => {
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+  });
+
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+  });
+
+  res.status(201).json({ msg: "User logged out successfully" });
+});
+
 export default router;
