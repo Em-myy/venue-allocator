@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import axiosClient from "../api/axios";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface AdminRequestType {
   _id: string;
@@ -62,6 +64,8 @@ const AdminDashboard = () => {
   });
   const [venueData, setVenueData] = useState<venueType[]>([]);
   const [timetableData, setTimetableData] = useState<timetableType[]>([]);
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
   const handleApprove = async (id: string) => {
     try {
@@ -118,6 +122,12 @@ const AdminDashboard = () => {
     } catch (error) {
       console.log(error);
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    console.log("Admin logged out successfully");
+    navigate("/adminHome");
   };
 
   useEffect(() => {
@@ -273,6 +283,9 @@ const AdminDashboard = () => {
       </div>
 
       <div>{msg}</div>
+      <button type="button" onClick={handleLogout}>
+        Logout
+      </button>
     </div>
   );
 };

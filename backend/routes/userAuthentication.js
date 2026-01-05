@@ -58,7 +58,7 @@ router.post("/login", async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user)
-      return res.json({
+      return res.status(400).json({
         msg: "User not registered..... Please go and register",
       });
 

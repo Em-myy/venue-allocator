@@ -1,6 +1,6 @@
 import { useState } from "react";
-import axiosClient from "../api/axios";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 interface formType {
   email: string;
@@ -12,8 +12,9 @@ const LecturerLogin = () => {
     email: "",
     password: "",
   });
-  const [msg, setMsg] = useState<string>("");
+
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [event.target.name]: event.target.value });
@@ -23,8 +24,7 @@ const LecturerLogin = () => {
     event.preventDefault();
 
     try {
-      const res = await axiosClient.post("/api/authentication/login", formData);
-      setMsg(res.data.msg);
+      await login(formData.email, formData.password);
       console.log("User Logged in successfully");
       navigate("/lecturerDashboard");
     } catch (error) {
@@ -61,7 +61,6 @@ const LecturerLogin = () => {
           </div>
         </form>
       </div>
-      <div>{msg}</div>
     </div>
   );
 };

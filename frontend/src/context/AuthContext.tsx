@@ -9,6 +9,7 @@ import axiosClient from "../api/axios";
 
 interface AuthContextType {
   user: any | null;
+  login: (email: string, password: string) => void;
   logout: () => void;
   loading: boolean;
 }
@@ -26,6 +27,11 @@ export const AuthProvider = ({ children }: AuthProviderType) => {
 
   useEffect(() => {
     const verifyUser = async () => {
+      if (isLoggedOut) {
+        setLoading(false);
+        return;
+      }
+
       try {
         const res = await axiosClient.get("/api/authentication/profile");
         setUser(res.data);
@@ -40,7 +46,7 @@ export const AuthProvider = ({ children }: AuthProviderType) => {
         setLoading(false);
       }
     };
-    if (isLoggedOut) return;
+
     verifyUser();
   }, [isLoggedOut]);
 
@@ -57,6 +63,14 @@ export const AuthProvider = ({ children }: AuthProviderType) => {
     };
   }, []);
 
+  const login = async (email: string, password: string): Promise<void> => {
+    await axiosClient.post("/api/authentication/login", { email, password });
+    const userRes = await axiosClient.get("/api/authentication/profile");
+
+    setUser(userRes.data);
+    setIsLoggedOut(false);
+  };
+
   const logout = async () => {
     await axiosClient.post("/api/authentication/logout");
     setUser(null);
@@ -64,7 +78,7 @@ export const AuthProvider = ({ children }: AuthProviderType) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

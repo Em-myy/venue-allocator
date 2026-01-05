@@ -1,6 +1,6 @@
 import { useState } from "react";
-import axiosClient from "../api/axios";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 interface formType {
   email: string;
@@ -12,8 +12,8 @@ const AdminLogin = () => {
     email: "",
     password: "",
   });
-  const [msg, setMsg] = useState<string>("");
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [event.target.name]: event.target.value });
@@ -23,8 +23,8 @@ const AdminLogin = () => {
     event.preventDefault();
 
     try {
-      const res = await axiosClient.post("/api/admin/login", formData);
-      setMsg(res.data.msg);
+      login(formData.email, formData.password);
+      console.log("admin logged in successfully");
       navigate("/adminDashboard");
     } catch (error) {
       console.log(error);
@@ -60,7 +60,6 @@ const AdminLogin = () => {
           </div>
         </form>
       </div>
-      <div>{msg}</div>
     </div>
   );
 };

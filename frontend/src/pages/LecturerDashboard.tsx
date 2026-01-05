@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import axiosClient from "../api/axios";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface courseType {
   code: string;
@@ -47,6 +49,8 @@ const LecturerDashboard = () => {
     preferredDays: [],
     preferredTimes: [],
   });
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
   const handleRequestSubmit = async (
     event: React.ChangeEvent<HTMLFormElement>
@@ -144,6 +148,12 @@ const LecturerDashboard = () => {
     } catch (error) {
       console.log(error);
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    console.log("User logged out successfully");
+    navigate("/lecturerHome");
   };
 
   useEffect(() => {
@@ -287,6 +297,10 @@ const LecturerDashboard = () => {
         <div>{userData.preferredDays.join(", ")}</div>
         <div>{userData.preferredTime.join(", ")}</div>
       </div>
+
+      <button type="button" onClick={handleLogout}>
+        Logout
+      </button>
     </div>
   );
 };
