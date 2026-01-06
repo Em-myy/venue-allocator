@@ -197,6 +197,12 @@ router.post("/submitCourses", AuthMiddleware, async (req, res) => {
   }
 });
 
+router.get("/getCourses", AuthMiddleware, async (req, res) => {
+  const userId = req.user._id;
+
+  const course = await Course.find({});
+});
+
 router.post("/logout", async (req, res) => {
   res.clearCookie("accessToken", {
     httpOnly: true,

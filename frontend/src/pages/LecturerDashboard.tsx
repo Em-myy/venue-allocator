@@ -201,6 +201,8 @@ const LecturerDashboard = () => {
     }
   }, []);
 
+  useEffect();
+
   return (
     <div>
       <div>Lecturer dashboard</div>
