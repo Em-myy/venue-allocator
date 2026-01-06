@@ -26,6 +26,26 @@ interface preferencesType {
   preferredTimes: string[];
 }
 
+const timeConverter = (timeStr: string): string => {
+  const cleanStr = timeStr.trim().toLowerCase();
+
+  const match = cleanStr.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/);
+  if (!match) return timeStr;
+
+  let [_, hoursStr, minutesStr, modifier] = match;
+  let hours = parseInt(hoursStr, 10);
+  let minutes = minutesStr || "00";
+
+  if (modifier) {
+    if (modifier === "pm" && hours < 12) {
+      hours += 12;
+    } else if (modifier === "am" && hours === 12) {
+      hours = 0;
+    }
+  }
+  return `${hours.toString().padStart(2, "0")}:${minutes}`;
+};
+
 const LecturerDashboard = () => {
   const [reason, setReason] = useState<string>("");
   const [msg, setMsg] = useState<string>("");
@@ -139,10 +159,23 @@ const LecturerDashboard = () => {
     event: React.ChangeEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
+
+    const formattedDays = preferencesForm.preferredDays.map((day) =>
+      day.trim().toUpperCase()
+    );
+
+    const formattedTimes = preferencesForm.preferredTimes.map((time) =>
+      timeConverter(time)
+    );
+
+    const payload = {
+      preferredDays: formattedDays,
+      preferredTimes: formattedTimes,
+    };
     try {
       const res = await axiosClient.patch(
         "/api/authentication/submitPreferences",
-        preferencesForm
+        payload
       );
       console.log(res.data.msg);
     } catch (error) {

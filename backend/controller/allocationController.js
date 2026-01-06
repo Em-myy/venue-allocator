@@ -2,8 +2,15 @@ import Course from "../models/Course.js";
 import Timetable from "../models/Timetable.js";
 import Venue from "../models/Venue.js";
 
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-const TIME_SLOTS = [8, 10, 12, 14, 16];
+const DAYS = [
+  "MONDAY",
+  "TUESDAY",
+  "WEDNESDAY",
+  "THURSDAY",
+  "FRIDAY",
+  "SATURDAY",
+];
+const TIME_SLOTS = [8, 10, 12, 14, 16, 18];
 
 const isFeasible = (course, venue, day, time, currentSchedule) => {
   if (course.expectedStudents > venue.capacity) {
