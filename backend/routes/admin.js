@@ -81,49 +81,6 @@ router.patch("/reject/:id", AuthMiddleware, async (req, res) => {
   }
 });
 
-router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(401).json({ msg: "User does not exist" });
-    }
-
-    if (user.role !== "admin") {
-      return res.status(401).json({ msg: "Not an admin" });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (isMatch === false) {
-      return res.status(401).json({ msg: "Invalid password" });
-    }
-
-    const accessToken = createAccessToken(user._id);
-    const refreshToken = createRefreshToken(user._id);
-
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      sameSite: "lax",
-      maxAge: 15 * 60 * 1000,
-      path: "/",
-    });
-
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      path: "/",
-    });
-
-    res.status(200).json({ msg: "Admin logged in successfully" });
-  } catch (error) {
-    console.log(error);
-  }
-});
-
 router.post("/register", async (req, res) => {
   const { username, email, password } = req.body;
 

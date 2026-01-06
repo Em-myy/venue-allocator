@@ -13,7 +13,7 @@ const AdminLogin = () => {
     password: "",
   });
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [event.target.name]: event.target.value });
@@ -23,7 +23,11 @@ const AdminLogin = () => {
     event.preventDefault();
 
     try {
-      login(formData.email, formData.password);
+      const loggedInUser = await login(formData.email, formData.password);
+      if (loggedInUser.role !== "admin") {
+        await logout();
+        return;
+      }
       console.log("admin logged in successfully");
       navigate("/adminDashboard");
     } catch (error) {

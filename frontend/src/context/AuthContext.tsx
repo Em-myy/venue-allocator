@@ -7,9 +7,19 @@ import {
 } from "react";
 import axiosClient from "../api/axios";
 
+interface userType {
+  name: string;
+  email: string;
+  role: string;
+  adminRequestStatus: string;
+  adminRequestReason: string;
+  preferredDays: string[];
+  preferredTime: string[];
+}
+
 interface AuthContextType {
   user: any | null;
-  login: (email: string, password: string) => void;
+  login: (email: string, password: string) => Promise<userType>;
   logout: () => void;
   loading: boolean;
 }
@@ -63,12 +73,14 @@ export const AuthProvider = ({ children }: AuthProviderType) => {
     };
   }, []);
 
-  const login = async (email: string, password: string): Promise<void> => {
+  const login = async (email: string, password: string): Promise<userType> => {
     await axiosClient.post("/api/authentication/login", { email, password });
     const userRes = await axiosClient.get("/api/authentication/profile");
 
     setUser(userRes.data);
     setIsLoggedOut(false);
+
+    return userRes.data;
   };
 
   const logout = async () => {
