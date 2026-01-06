@@ -11,6 +11,18 @@ interface courseType {
   requiredResources: string[] | null;
 }
 
+interface courseDetail {
+  _id: string;
+  code: string;
+  title: string;
+  expectedStudents: number | null;
+  duration: number | null;
+  requiredResources: string[] | null;
+  lecturer: {
+    username: string;
+  };
+}
+
 interface userType {
   name: string;
   email: string;
@@ -69,6 +81,7 @@ const LecturerDashboard = () => {
     preferredDays: [],
     preferredTimes: [],
   });
+  const [courseData, setCourseData] = useState<courseDetail[]>([]);
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -123,8 +136,23 @@ const LecturerDashboard = () => {
         "/api/authentication/submitCourses",
         cleanedData
       );
+
+      if (res.data.course) {
+        const refreshRes = await axiosClient.get(
+          "/api/authentication/getCourses"
+        );
+        setCourseData(refreshRes.data.courses);
+      }
+
+      setFormData({
+        code: "",
+        title: "",
+        expectedStudents: null,
+        duration: null,
+        requiredResources: null,
+      });
+
       console.log("Courses submitted successfully");
-      console.log(res.data.course);
     } catch (error) {
       console.log(error);
     }
@@ -201,7 +229,17 @@ const LecturerDashboard = () => {
     }
   }, []);
 
-  useEffect();
+  useEffect(() => {
+    const getCourses = async () => {
+      try {
+        const res = await axiosClient.get("/api/authentication/getCourses");
+        setCourseData(res.data.courses);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    getCourses();
+  }, []);
 
   return (
     <div>
@@ -324,13 +362,32 @@ const LecturerDashboard = () => {
           </div>
         </form>
       </div>
+
       <div>
+        <h2>Lecturer Detail</h2>
         <div>{userData.name}</div>
         <div>{userData.role}</div>
         <div>{userData.adminRequestReason}</div>
         <div>{userData.adminRequestStatus}</div>
+        <h2>Lecturer Preferences</h2>
         <div>{userData.preferredDays.join(", ")}</div>
         <div>{userData.preferredTime.join(", ")}</div>
+      </div>
+
+      <div>
+        <h2>Lecturer Courses</h2>
+        <div>
+          {courseData.map((index) => (
+            <div key={index._id}>
+              <div>{index.code}</div>
+              <div>{index.duration}</div>
+              <div>{index.expectedStudents}</div>
+              <div>{index.title}</div>
+              <div>{index.requiredResources}</div>
+              <div>{index.lecturer.username}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <button type="button" onClick={handleLogout}>

@@ -198,9 +198,22 @@ router.post("/submitCourses", AuthMiddleware, async (req, res) => {
 });
 
 router.get("/getCourses", AuthMiddleware, async (req, res) => {
-  const userId = req.user._id;
+  const lecturerId = req.user._id;
 
-  const course = await Course.find({});
+  try {
+    const courses = await Course.find({ lecturer: lecturerId }).populate(
+      "lecturer",
+      "username"
+    );
+
+    if (!courses || courses.length === 0) {
+      return res.status(401).json({ msg: "No courses found" });
+    }
+
+    res.status(201).json({ courses });
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 router.post("/logout", async (req, res) => {

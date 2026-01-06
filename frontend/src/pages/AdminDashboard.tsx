@@ -118,6 +118,12 @@ const AdminDashboard = () => {
   const handleTimetable = async () => {
     try {
       const res = await axiosClient.get("/api/admin/generate");
+      if (res.data.generated) {
+        setTimetableData(res.data.generated);
+      } else {
+        const refresh = await axiosClient.get("/api/admin/getTimetable");
+        setTimetableData(refresh.data.timetable);
+      }
       console.log(res.data.timetable);
     } catch (error) {
       console.log(error);

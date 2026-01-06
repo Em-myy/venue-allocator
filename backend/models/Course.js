@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const courseSchema = new mongoose.Schema({
   code: { type: String, required: true, unique: true },
   title: { type: String, required: true },
-  expectedStudents: { type: Number, required: true },
+  expectedStudents: { type: Number, default: 1 },
   lecturer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
