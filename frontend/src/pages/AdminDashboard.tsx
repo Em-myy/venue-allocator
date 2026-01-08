@@ -221,24 +221,29 @@ const AdminDashboard = () => {
 
   return (
     <div>
-      <div>Admin Dashboard</div>
-      {candidateData.map((index) => (
-        <div key={index._id}>
-          <div>{index.email}</div>
-          <div>{index.role}</div>
-          <div>{index.adminRequestReason}</div>
-          <div>{index.adminRequestStatus}</div>
-
-          <button type="button" onClick={() => handleApprove(index._id)}>
-            Approve
-          </button>
-          <button type="button" onClick={() => handleReject(index._id)}>
-            Reject
-          </button>
-        </div>
-      ))}
+      <h1>Admin Dashboard</h1>
 
       <div>
+        <h2>Admin approval section</h2>
+        {candidateData.map((index) => (
+          <div key={index._id}>
+            <div>{index.email}</div>
+            <div>{index.role}</div>
+            <div>{index.adminRequestReason}</div>
+            <div>{index.adminRequestStatus}</div>
+
+            <button type="button" onClick={() => handleApprove(index._id)}>
+              Approve
+            </button>
+            <button type="button" onClick={() => handleReject(index._id)}>
+              Reject
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <div>
+        <h2>Form addition section</h2>
         <form onSubmit={handleFormSubmit}>
           <div>
             <label>Name: </label>
@@ -285,6 +290,7 @@ const AdminDashboard = () => {
       </div>
 
       <div>
+        <h2>Courses section</h2>
         {courseData.map((index) => (
           <div key={index._id}>
             <div>{index.code}</div>
@@ -298,6 +304,7 @@ const AdminDashboard = () => {
       </div>
 
       <div>
+        <h2>Venue section</h2>
         {venueData.map((index) => (
           <div key={index._id}>
             <div>{index.name}</div>
@@ -308,9 +315,10 @@ const AdminDashboard = () => {
         ))}
       </div>
 
-      <button onClick={handleTimetable}>Create Timetable</button>
-
       <div>
+        <h2>Timetable section</h2>
+        <button onClick={handleTimetable}>Create Timetable</button>
+
         {timetableData.map((index) => (
           <div key={index._id}>
             <div>{index.course.title}</div>
