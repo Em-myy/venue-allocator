@@ -185,6 +185,16 @@ const AdminDashboard = () => {
       }
     };
     handleVenues();
+
+    const handleNewVenue = async (newVenues: venueType) => {
+      setVenueData((prevVenues) => [...prevVenues, newVenues]);
+    };
+
+    socket.on("venueAdded", handleNewVenue);
+
+    return () => {
+      socket.off("venueAdded", handleNewVenue);
+    };
   }, []);
 
   useEffect(() => {
@@ -197,6 +207,16 @@ const AdminDashboard = () => {
       }
     };
     handleTimetable();
+
+    const handleNewTimetable = async (newTimetable: timetableType) => {
+      setTimetableData((prevTimetable) => [...prevTimetable, newTimetable]);
+    };
+
+    socket.on("timetableUpdated", handleNewTimetable);
+
+    return () => {
+      socket.off("timetableUpdated", handleNewTimetable);
+    };
   }, []);
 
   return (
