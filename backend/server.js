@@ -6,7 +6,7 @@ import adminRoutes from "./routes/admin.js";
 import mongoose from "mongoose";
 import cors from "cors";
 import { Server } from "socket.io";
-import http from "http";
+import http, { IncomingMessage } from "http";
 
 dotenv.config();
 
@@ -29,13 +29,18 @@ app.use(
   })
 );
 
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
 app.use("/api/authentication", userRoutes);
 app.use("/api/admin", adminRoutes);
 
 mongoose
   .connect(process.env.MONGO_URL)
   .then(() => {
-    app.listen(process.env.PORT, () => {
+    server.listen(process.env.PORT, () => {
       console.log("Server is listening on port 3000");
     });
   })

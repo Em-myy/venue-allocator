@@ -191,6 +191,8 @@ router.post("/submitCourses", AuthMiddleware, async (req, res) => {
     });
     await course.save();
 
+    req.io.emit("courseAdded", course);
+
     res.status(201).json({ course });
   } catch (error) {
     console.log(error);

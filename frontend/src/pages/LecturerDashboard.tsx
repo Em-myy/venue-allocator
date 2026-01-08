@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axiosClient from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { io } from "socket.io-client";
 
 interface courseType {
   code: string;
@@ -57,6 +58,10 @@ const timeConverter = (timeStr: string): string => {
   }
   return `${hours.toString().padStart(2, "0")}:${minutes}`;
 };
+
+const apiUrl: string = import.meta.env.VITE_BACKEND_URL;
+
+const socket = io(apiUrl);
 
 const LecturerDashboard = () => {
   const [reason, setReason] = useState<string>("");
@@ -239,6 +244,16 @@ const LecturerDashboard = () => {
       }
     };
     getCourses();
+
+    const handleNewCourses = (newCourse: courseDetail) => {
+      setCourseData((prevCourses) => [...prevCourses, newCourse]);
+    };
+
+    socket.on("courseAdded", handleNewCourses);
+
+    return () => {
+      socket.off("courseAdded", handleNewCourses);
+    };
   }, []);
 
   return (

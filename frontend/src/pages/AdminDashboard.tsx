@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axiosClient from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { io } from "socket.io-client";
 
 interface AdminRequestType {
   _id: string;
@@ -51,6 +52,10 @@ interface timetableType {
     name: string;
   };
 }
+
+const apiUrl: string = import.meta.env.VITE_BACKEND_URL;
+
+const socket = io(apiUrl);
 
 const AdminDashboard = () => {
   const [candidateData, setCandidateData] = useState<AdminRequestType[]>([]);
@@ -158,6 +163,16 @@ const AdminDashboard = () => {
       }
     };
     handleCourses();
+
+    const handleNewCourses = (newCourse: courseType) => {
+      setCourseData((prevCourses) => [...prevCourses, newCourse]);
+    };
+
+    socket.on("courseAdded", handleNewCourses);
+
+    return () => {
+      socket.off("courseAdded", handleNewCourses);
+    };
   }, []);
 
   useEffect(() => {

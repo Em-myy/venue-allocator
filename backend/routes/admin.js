@@ -57,6 +57,12 @@ router.patch("/approve/:id", AuthMiddleware, async (req, res) => {
 
     await user.save();
 
+    req.io.emit("adminApproved", {
+      userId: user._id,
+      username: user.username,
+      role: "admin",
+    });
+
     res.status(201).json({ msg: "Approval successful" });
   } catch (error) {
     res.status(404).json({ msg: "User not approved" });
@@ -144,6 +150,8 @@ router.post("/createVenue", AuthMiddleware, async (req, res) => {
     const venue = new Venue({ name, capacity, type, resources });
     await venue.save();
 
+    req.io.emit("venueAdded", venue);
+
     res.status(201).json({ venue });
   } catch (error) {
     console.log(error);
@@ -162,6 +170,12 @@ router.get("/getVenues", AuthMiddleware, async (req, res) => {
 router.get("/generate", async (req, res) => {
   try {
     const result = await GenerateTimetable();
+
+    req.io.emit("timetableUpdated", {
+      timetable: result.generated,
+      unallocated: result.unallocated,
+    });
+
     res.status(200).json({
       msg: "Timetable created",
       timetable: result.generated,
