@@ -11,7 +11,7 @@ interface courseType {
   duration: number | null;
   requiredResources: string[] | null;
 }
-
+aaaaaaaaaaa
 interface courseDetail {
   _id: string;
   code: string;
