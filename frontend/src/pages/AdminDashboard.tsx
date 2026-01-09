@@ -151,6 +151,28 @@ const AdminDashboard = () => {
       }
     };
     handleCandidates();
+
+    socket.on("newAdminRequest", (newRequest) => {
+      setCandidateData((prev) => [...prev, newRequest]);
+    });
+
+    socket.on("adminApproved", (updatedData) => {
+      setCandidateData((prev) =>
+        prev.filter((req) => req._id !== updatedData.userId)
+      );
+    });
+
+    socket.on("adminRejected", (deletedData) => {
+      setCandidateData((prev) =>
+        prev.filter((req) => req._id !== deletedData.userId)
+      );
+    });
+
+    return () => {
+      socket.off("newAdminRequest");
+      socket.off("adminApproved");
+      socket.off("adminRejected");
+    };
   }, []);
 
   useEffect(() => {
@@ -298,7 +320,7 @@ const AdminDashboard = () => {
             <div>{index.expectedStudents}</div>
             <div>{index.title}</div>
             <div>{index.requiredResources}</div>
-            <div>{index.lecturer.username}</div>
+            <div>{index.lecturer?.username || "Unknown Lecturer"}</div>
           </div>
         ))}
       </div>

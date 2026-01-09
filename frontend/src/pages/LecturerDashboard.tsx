@@ -25,6 +25,7 @@ interface courseDetail {
 }
 
 interface userType {
+  _id: string;
   name: string;
   email: string;
   role: string;
@@ -74,6 +75,7 @@ const LecturerDashboard = () => {
     requiredResources: null,
   });
   const [userData, setUserData] = useState<userType>({
+    _id: "",
     name: "",
     email: "",
     role: "",
@@ -95,9 +97,17 @@ const LecturerDashboard = () => {
   ) => {
     event.preventDefault();
     try {
-      const res = await axiosClient.post("/api/admin/request", { reason });
+      const res = await axiosClient.post("/api/authentication/request", {
+        reason,
+      });
       setMsg(res.data.msg);
       setReason("");
+
+      setUserData((prev) => ({
+        ...prev,
+        adminRequestStatus: "pending",
+        adminRequestReason: reason,
+      }));
     } catch (error) {
       console.log(error);
     }
@@ -229,10 +239,48 @@ const LecturerDashboard = () => {
         setUserData(res.data);
       };
       getDetails();
+
+      socket.on("newAdminRequest", (newRequest) => {
+        setUserData(newRequest);
+      });
+
+      return () => {
+        socket.off("newAdminRequest");
+      };
     } catch (error) {
       console.log(error);
     }
-  }, []);
+  }, [userData]);
+
+  useEffect(() => {
+    const handleApproval = (data: any) => {
+      if (data.userId === userData._id) {
+        setUserData((prev) => ({
+          ...prev,
+          adminRequestStatus: "approved",
+          role: "admin",
+        }));
+      }
+    };
+
+    const handleRejection = (data: any) => {
+      if (data.userId === userData._id) {
+        setUserData((prev) => ({
+          ...prev,
+          adminRequestStatus: "rejected",
+          role: "lecturer",
+        }));
+      }
+    };
+
+    socket.on("adminApproved", handleApproval);
+    socket.on("adminRejected", handleRejection);
+
+    return () => {
+      socket.off("adminApproved", handleApproval);
+      socket.off("adminRejected", handleRejection);
+    };
+  }, [userData._id]);
 
   useEffect(() => {
     const getCourses = async () => {
@@ -258,28 +306,35 @@ const LecturerDashboard = () => {
 
   return (
     <div>
-      <div>Lecturer dashboard</div>
-      {userData.adminRequestStatus === "pending" ||
-      userData.adminRequestStatus === "approved" ? null : (
-        <div>
-          <form onSubmit={handleRequestSubmit}>
-            <div>
-              <label>Admin Reason</label>
-              <input
-                type="text"
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                  setReason(event.target.value)
-                }
-                value={reason}
-                name="reason"
-              />
-            </div>
-            <button>Submit</button>
-          </form>
-        </div>
-      )}
-      <div>{msg}</div>
+      <h1>Lecturer dashboard</h1>
+
       <div>
+        <h2>Admin request</h2>
+        <div>
+          {userData.adminRequestStatus === "pending" ||
+          userData.adminRequestStatus === "approved" ? null : (
+            <div>
+              <form onSubmit={handleRequestSubmit}>
+                <div>
+                  <label>Admin Reason</label>
+                  <input
+                    type="text"
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                      setReason(event.target.value)
+                    }
+                    value={reason}
+                    name="reason"
+                  />
+                </div>
+                <button>Submit</button>
+              </form>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <h2>Submit courses</h2>
         <form onSubmit={handleCoursesSubmit}>
           <div>
             <div>
@@ -379,14 +434,19 @@ const LecturerDashboard = () => {
       </div>
 
       <div>
-        <h2>Lecturer Detail</h2>
-        <div>{userData.name}</div>
-        <div>{userData.role}</div>
-        <div>{userData.adminRequestReason}</div>
-        <div>{userData.adminRequestStatus}</div>
-        <h2>Lecturer Preferences</h2>
-        <div>{userData.preferredDays.join(", ")}</div>
-        <div>{userData.preferredTime.join(", ")}</div>
+        <div>
+          <h2>Lecturer Detail</h2>
+          <div>{userData.name}</div>
+          <div>{userData.role}</div>
+          <div>{userData.adminRequestReason}</div>
+          <div>{userData.adminRequestStatus}</div>
+        </div>
+
+        <div>
+          <h2>Lecturer Preferences</h2>
+          <div>{userData.preferredDays.join(", ")}</div>
+          <div>{userData.preferredTime.join(", ")}</div>
+        </div>
       </div>
 
       <div>

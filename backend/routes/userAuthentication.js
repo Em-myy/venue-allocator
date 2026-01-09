@@ -128,8 +128,8 @@ router.post("/refresh", async (req, res) => {
     });
 
     res.json({
-      id: user._id,
-      name: user.name,
+      _id: user._id,
+      name: user.username,
       role: user.role,
       adminRequestStatus: user.adminRequestStatus,
       adminRequestReason: user.adminRequestReason,
@@ -139,6 +139,34 @@ router.post("/refresh", async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(403).json({ msg: "Invalid refresh token" });
+  }
+});
+
+router.post("/request", AuthMiddleware, async (req, res) => {
+  try {
+    const { reason } = req.body;
+    if (req.user.role === "admin") {
+      return res.status(400).json({ msg: "You are already an admin" });
+    }
+
+    req.user.adminRequestStatus = "pending";
+    req.user.adminRequestReason = reason;
+
+    await req.user.save();
+
+    req.io.emit("newAdminRequest", {
+      _id: req.user._id,
+      email: req.user.email,
+      role: req.user.role,
+      adminRequestReason: reason,
+      adminRequestStatus: "pending",
+      preferredDays: req.user.preferences.preferredDays,
+      preferredTime: req.user.preferences.preferredTimes,
+    });
+
+    res.status(202).json({ msg: "Request submitted successfully" });
+  } catch (error) {
+    res.status(400).json({ msg: "Error submitting request" });
   }
 });
 
@@ -190,6 +218,8 @@ router.post("/submitCourses", AuthMiddleware, async (req, res) => {
       lecturer: lecturerId,
     });
     await course.save();
+
+    await course.populate("lecturer", "username");
 
     req.io.emit("courseAdded", course);
 

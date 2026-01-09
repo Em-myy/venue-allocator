@@ -18,24 +18,6 @@ const createRefreshToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_REFRESH_SECRET, { expiresIn: "7d" });
 };
 
-router.post("/request", AuthMiddleware, async (req, res) => {
-  try {
-    const { reason } = req.body;
-    if (req.user.role === "admin") {
-      return res.status(400).json({ msg: "You are already an admin" });
-    }
-
-    req.user.adminRequestStatus = "pending";
-    req.user.adminRequestReason = reason;
-
-    await req.user.save();
-
-    res.status(202).json({ msg: "Request submitted successfully" });
-  } catch (error) {
-    res.status(400).json({ msg: "Error submitting request" });
-  }
-});
-
 router.get("/request", AuthMiddleware, async (req, res) => {
   const requests = await User.find({ adminRequestStatus: "pending" }).select(
     "-password"
@@ -80,6 +62,12 @@ router.patch("/reject/:id", AuthMiddleware, async (req, res) => {
     user.adminRequestStatus = "rejected";
 
     await user.save();
+
+    req.io.emit("adminRejected", {
+      userId: user._id,
+      username: user.username,
+      role: "lecturer",
+    });
 
     res.status(201).json({ msg: "Rejected" });
   } catch (error) {
