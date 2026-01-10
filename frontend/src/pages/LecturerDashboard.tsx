@@ -3,8 +3,18 @@ import axiosClient from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
+import CourseModal from "../components/CourseModal";
 
 interface courseType {
+  code: string;
+  title: string;
+  expectedStudents: number | null;
+  duration: number | null;
+  requiredResources: string[] | null;
+}
+
+interface courseDetails {
+  _id: string;
   code: string;
   title: string;
   expectedStudents: number | null;
@@ -89,6 +99,15 @@ const LecturerDashboard = () => {
     preferredTimes: [],
   });
   const [courseData, setCourseData] = useState<courseDetail[]>([]);
+  const [courseEditDetails, setCourseEditDetails] = useState<courseDetails>({
+    _id: "",
+    code: "",
+    title: "",
+    expectedStudents: null,
+    duration: null,
+    requiredResources: null,
+  });
+  const [editShowMenu, setEditShowMenu] = useState<boolean>(false);
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -221,6 +240,44 @@ const LecturerDashboard = () => {
         payload
       );
       console.log(res.data.msg);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleEdit = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    const clickedButton = event.currentTarget;
+
+    const courseId = clickedButton.dataset.id;
+
+    try {
+      const res = await axiosClient.get(
+        `/api/authentication/courseDetails/${courseId}`
+      );
+
+      setCourseEditDetails({
+        _id: res.data.course._id,
+        code: res.data.course.code,
+        title: res.data.course.title,
+        expectedStudents: res.data.course.expectedStudents,
+        duration: res.data.course.duration,
+        requiredResources: res.data.course.requiredResources,
+      });
+      setEditShowMenu(true);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleDelete = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    const clickedButton = event.currentTarget;
+
+    const courseId = clickedButton.dataset.id;
+
+    try {
+      const res = await axiosClient.delete(
+        `/api/authentication/deleteCourse/${courseId}`
+      );
     } catch (error) {
       console.log(error);
     }
@@ -434,6 +491,20 @@ const LecturerDashboard = () => {
       </div>
 
       <div>
+        <h2>Edit Course</h2>
+        {editShowMenu ? (
+          <div>
+            <div onClick={(e) => e.stopPropagation()}>
+              <div>
+                <button onClick={() => setEditShowMenu(false)}>Close</button>
+              </div>
+              <CourseModal courseDetails={courseEditDetails} />
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      <div>
         <div>
           <h2>Lecturer Detail</h2>
           <div>{userData.name}</div>
@@ -460,6 +531,24 @@ const LecturerDashboard = () => {
               <div>{index.title}</div>
               <div>{index.requiredResources}</div>
               <div>{index.lecturer.username}</div>
+              <button
+                data-id={index._id}
+                type="button"
+                onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
+                  handleEdit(event)
+                }
+              >
+                Edit
+              </button>
+              <button
+                data-id={index._id}
+                type="button"
+                onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
+                  handleDelete(event)
+                }
+              >
+                Delete
+              </button>
             </div>
           ))}
         </div>

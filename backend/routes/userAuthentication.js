@@ -248,6 +248,46 @@ router.get("/getCourses", AuthMiddleware, async (req, res) => {
   }
 });
 
+router.get("/courseDetails/:id", AuthMiddleware, async (req, res) => {
+  const id = req.params.id;
+  try {
+    const course = await Course.findById(id);
+
+    res.status(201).json({ course });
+  } catch (error) {
+    console.log(error);
+    res.status(404).json({ msg: "Course not found" });
+  }
+});
+
+router.patch("/editCourse/:id", AuthMiddleware, async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    const updatedCourse = await Course.findByIdAndUpdate(
+      id,
+      { $set: req.body },
+      { new: true }
+    );
+    res.status(200).json({ msg: "Course updated successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(404).json({ msg: "Error updating course" });
+  }
+});
+
+router.delete("/deleteCourse/:id", AuthMiddleware, async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    await Course.findByIdAndDelete(id);
+    res.status(201).json({ msg: "COurse deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(404).json({ msg: "Error deleting course" });
+  }
+});
+
 router.post("/logout", async (req, res) => {
   res.clearCookie("accessToken", {
     httpOnly: true,
