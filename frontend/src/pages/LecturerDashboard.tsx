@@ -12,6 +12,7 @@ interface courseType {
   duration: number | null;
   requiredResources: string[] | null;
 }
+<<<<<<< HEAD
 
 interface courseDetails {
   _id: string;
@@ -22,6 +23,9 @@ interface courseDetails {
   requiredResources: string[] | null;
 }
 
+=======
+aaaaaaaaaaa
+>>>>>>> 3d17ced2dc25eb8dfd8f83d2e2e5fd33157ab627
 interface courseDetail {
   _id: string;
   code: string;
