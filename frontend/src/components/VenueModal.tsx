@@ -22,6 +22,8 @@ const VenueModal: React.FC<Props> = ({ venueDetails, closeModal }) => {
     type: "",
     resources: [],
   });
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [msg, setMsg] = useState<string>("");
 
   const handleFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [event.target.name]: event.target.value });
@@ -42,13 +44,18 @@ const VenueModal: React.FC<Props> = ({ venueDetails, closeModal }) => {
 
   const handleSubmit = async (event: React.ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setIsLoading(true);
     const venueId = venueDetails._id;
 
     try {
       await axiosClient.patch(`/api/admin/editVenue/${venueId}`, formData);
-      closeModal();
+      setMsg("Venue Updated Successfully");
+      setTimeout(() => {
+        closeModal();
+      }, 3000);
     } catch (error) {
-      console.log(error);
+      setMsg("Error In Updating Venue");
+      setIsLoading(false);
     }
   };
 
@@ -61,52 +68,102 @@ const VenueModal: React.FC<Props> = ({ venueDetails, closeModal }) => {
       resources: venueDetails.resources,
     });
   }, [venueDetails]);
+
+  const labelClass =
+    "block text-gray-700 text-xs font-bold mb-1 uppercase tracking-wide";
+  const inputClass =
+    "w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent transition text-sm";
+
   return (
     <div>
-      <h2>Venue Edition section</h2>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label>Name: </label>
+          <label className={labelClass}>Venue Name</label>
           <input
             type="text"
-            placeholder="Venue name"
+            placeholder="e.g. Lecture Hall 1"
             name="name"
             value={formData.name}
             onChange={handleFormChange}
+            className={inputClass}
+            required
           />
         </div>
-        <div>
-          <label>Capacity: </label>
-          <input
-            type="text"
-            placeholder="Capacity"
-            name="capacity"
-            value={formData.capacity}
-            onChange={handleFormChange}
-          />
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass}>Capacity</label>
+            <input
+              type="text"
+              placeholder="e.g. 100"
+              name="capacity"
+              value={formData.capacity}
+              onChange={handleFormChange}
+              className={inputClass}
+              required
+            />
+          </div>
+
+          <div>
+            <label className={labelClass}>Type</label>
+            <input
+              type="text"
+              placeholder="Lab, Hall, Room..."
+              name="type"
+              value={formData.type}
+              onChange={handleFormChange}
+              className={inputClass}
+              required
+            />
+          </div>
         </div>
+
         <div>
-          <label>Type: </label>
-          <input
-            type="text"
-            placeholder="Venue type"
-            name="type"
-            value={formData.type}
-            onChange={handleFormChange}
-          />
-        </div>
-        <div>
-          <label>Resources: </label>
+          <label className={labelClass}>Resources</label>
           <input
             type="text"
             placeholder="Resources"
             name="resources"
-            value={formData.resources}
+            value={formData.resources.join(",")}
             onChange={handleResourcesChange}
+            className={inputClass}
           />
+          <p className="text-[10px] text-gray-400 mt-1">
+            Separate multiple resources with commas.
+          </p>
         </div>
-        <button type="submit">Edit Venue</button>
+
+        <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-6">
+          <button
+            type="button"
+            onClick={closeModal}
+            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold transition cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={`px-4 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-lg text-sm font-semibold shadow-sm transition
+                ${
+                  isLoading ? "opacity-70 cursor-not-allowed" : "cursor-pointer"
+                }`}
+          >
+            {isLoading ? "Saving..." : "Update Venue"}
+          </button>
+        </div>
       </form>
+      {msg && (
+        <div
+          className={`mt-4 p-3 text-center rounded-lg text-sm font-medium border ${
+            isLoading
+              ? "bg-green-100 text-green-700 border-green-200"
+              : "bg-red-100 text-red-700 border-red-200"
+          } `}
+        >
+          {msg}
+        </div>
+      )}
     </div>
   );
 };

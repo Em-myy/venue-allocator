@@ -314,6 +314,8 @@ const LecturerDashboard = () => {
 
     const courseId = clickedButton.dataset.id;
 
+    if (!window.confirm("Are you sure you want to delete this course?")) return;
+
     try {
       await axiosClient.delete(`/api/authentication/deleteCourse/${courseId}`);
 
