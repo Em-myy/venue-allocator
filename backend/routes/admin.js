@@ -155,6 +155,56 @@ router.get("/getVenues", AuthMiddleware, async (req, res) => {
   }
 });
 
+router.get("/venueDetails/:id", AuthMiddleware, async (req, res) => {
+  const id = req.params.id;
+  try {
+    const venue = await Venue.findById(id);
+
+    res.status(201).json({ venue });
+  } catch (error) {
+    console.log(error);
+    res.status(404).json({ msg: "Venue not found" });
+  }
+});
+
+router.patch("/editVenue/:id", AuthMiddleware, async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    const updatedVenue = await Venue.findByIdAndUpdate(
+      id,
+      { $set: req.body },
+      { new: true }
+    );
+
+    req.io.emit("venueUpdated", updatedVenue);
+
+    res.status(200).json({ msg: "Venue updated successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(404).json({ msg: "Error updating venue" });
+  }
+});
+
+router.delete("/deleteVenue/:id", AuthMiddleware, async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    const venue = await Venue.findByIdAndDelete(id);
+
+    if (!venue) {
+      return res.status(404).json({ msg: "Venue not found" });
+    }
+
+    req.io.emit("venueDeleted", venue);
+
+    res.status(201).json({ msg: "Venue deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(404).json({ msg: "Error deleting venue" });
+  }
+});
+
 router.get("/generate", async (req, res) => {
   try {
     const result = await GenerateTimetable();

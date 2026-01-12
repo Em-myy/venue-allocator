@@ -97,13 +97,13 @@ router.get("/profile", AuthMiddleware, async (req, res) => {
   const user = await User.findById(lecturerId);
 
   res.status(200).json({
-    id: user._id,
-    name: user.name,
+    _id: user._id,
+    name: user.username,
     role: user.role,
     adminRequestStatus: user.adminRequestStatus,
     adminRequestReason: user.adminRequestReason,
-    preferredDays: user.preferences.preferredDays,
-    preferredTime: user.preferences.preferredTimes,
+    preferredDays: user.preferences?.preferredDays || [],
+    preferredTimes: user.preferences?.preferredTimes || [],
   });
 });
 
@@ -134,7 +134,7 @@ router.post("/refresh", async (req, res) => {
       adminRequestStatus: user.adminRequestStatus,
       adminRequestReason: user.adminRequestReason,
       preferredDays: user.preferences.preferredDays,
-      preferredTime: user.preferences.preferredTimes,
+      preferredTimes: user.preferences.preferredTimes,
     });
   } catch (error) {
     console.log(error);
@@ -161,7 +161,7 @@ router.post("/request", AuthMiddleware, async (req, res) => {
       adminRequestReason: reason,
       adminRequestStatus: "pending",
       preferredDays: req.user.preferences.preferredDays,
-      preferredTime: req.user.preferences.preferredTimes,
+      preferredTimes: req.user.preferences.preferredTimes,
     });
 
     res.status(202).json({ msg: "Request submitted successfully" });
@@ -189,6 +189,61 @@ router.patch("/submitPreferences", AuthMiddleware, async (req, res) => {
     if (!updatedUser) {
       return res.status(404).json({ msg: "User not found" });
     }
+
+    const formattedUser = {
+      _id: updatedUser._id,
+      name: updatedUser.username,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      adminRequestStatus: updatedUser.adminRequestStatus,
+      adminRequestReason: updatedUser.adminRequestReason,
+      preferredDays: updatedUser.preferences.preferredDays,
+      preferredTimes: updatedUser.preferences.preferredTimes,
+    };
+
+    req.io.emit("preferenceCreated", formattedUser);
+
+    res.status(202).json({ msg: "Preferences submitted successfully" });
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+router.patch("/editPreferences", AuthMiddleware, async (req, res) => {
+  const preferredTimes = req.body.preferredTimes || [];
+  const preferredDays = req.body.preferredDays || [];
+
+  try {
+    const userId = req.user._id;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+
+      {
+        $set: {
+          "preferences.preferredDays": preferredDays,
+          "preferences.preferredTimes": preferredTimes,
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    const formattedUser = {
+      _id: updatedUser._id,
+      name: updatedUser.username,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      adminRequestStatus: updatedUser.adminRequestStatus,
+      adminRequestReason: updatedUser.adminRequestReason,
+      preferredDays: updatedUser.preferences.preferredDays,
+      preferredTimes: updatedUser.preferences.preferredTimes,
+    };
+
+    req.io.emit("preferenceUpdated", formattedUser);
 
     res.status(202).json({ msg: "Preferences submitted successfully" });
   } catch (error) {
@@ -269,6 +324,9 @@ router.patch("/editCourse/:id", AuthMiddleware, async (req, res) => {
       { $set: req.body },
       { new: true }
     );
+
+    req.io.emit("courseUpdated", updatedCourse);
+
     res.status(200).json({ msg: "Course updated successfully" });
   } catch (error) {
     console.log(error);
@@ -280,8 +338,15 @@ router.delete("/deleteCourse/:id", AuthMiddleware, async (req, res) => {
   const id = req.params.id;
 
   try {
-    await Course.findByIdAndDelete(id);
-    res.status(201).json({ msg: "COurse deleted successfully" });
+    const course = await Course.findByIdAndDelete(id);
+
+    if (!course) {
+      return res.status(404).json({ msg: "Course not found" });
+    }
+
+    req.io.emit("courseDeleted", course);
+
+    res.status(201).json({ msg: "Course deleted successfully" });
   } catch (error) {
     console.log(error);
     res.status(404).json({ msg: "Error deleting course" });

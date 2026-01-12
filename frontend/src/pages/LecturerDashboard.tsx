@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import CourseModal from "../components/CourseModal";
+import PreferencesModal from "../components/PreferencesModal";
 
 interface courseType {
   code: string;
@@ -12,7 +13,6 @@ interface courseType {
   duration: number | null;
   requiredResources: string[] | null;
 }
-<<<<<<< HEAD
 
 interface courseDetails {
   _id: string;
@@ -23,9 +23,6 @@ interface courseDetails {
   requiredResources: string[] | null;
 }
 
-=======
-aaaaaaaaaaa
->>>>>>> 3d17ced2dc25eb8dfd8f83d2e2e5fd33157ab627
 interface courseDetail {
   _id: string;
   code: string;
@@ -46,7 +43,7 @@ interface userType {
   adminRequestStatus: string;
   adminRequestReason: string;
   preferredDays: string[];
-  preferredTime: string[];
+  preferredTimes: string[];
 }
 
 interface preferencesType {
@@ -96,12 +93,14 @@ const LecturerDashboard = () => {
     adminRequestStatus: "",
     adminRequestReason: "",
     preferredDays: [],
-    preferredTime: [],
+    preferredTimes: [],
   });
   const [preferencesForm, setPreferencesForm] = useState<preferencesType>({
     preferredDays: [],
     preferredTimes: [],
   });
+  const [preferencesEditDetails, setPreferencesEditDetails] =
+    useState<preferencesType>({ preferredDays: [], preferredTimes: [] });
   const [courseData, setCourseData] = useState<courseDetail[]>([]);
   const [courseEditDetails, setCourseEditDetails] = useState<courseDetails>({
     _id: "",
@@ -112,6 +111,9 @@ const LecturerDashboard = () => {
     requiredResources: null,
   });
   const [editShowMenu, setEditShowMenu] = useState<boolean>(false);
+  const [preferenceEditShowMenu, setPreferenceEditShowMenu] =
+    useState<boolean>(false);
+  const [courseLoading, setCourseLoading] = useState<boolean>(true);
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -244,6 +246,16 @@ const LecturerDashboard = () => {
         payload
       );
       console.log(res.data.msg);
+
+      if (res.data.data) {
+        setUserData((prev) => ({
+          ...prev,
+          preferredDays: res.data.preferredDays,
+          preferredTimes: res.data.preferredTimes,
+        }));
+      }
+
+      setPreferencesForm({ preferredDays: [], preferredTimes: [] });
     } catch (error) {
       console.log(error);
     }
@@ -273,15 +285,29 @@ const LecturerDashboard = () => {
     }
   };
 
+  const handlePreferencesEdit = async () => {
+    try {
+      const res = await axiosClient.get("/api/authentication/profile");
+
+      setPreferencesEditDetails({
+        preferredDays: res.data.preferredDays,
+        preferredTimes: res.data.preferredTimes,
+      });
+      setPreferenceEditShowMenu(true);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const handleDelete = async (event: React.MouseEvent<HTMLButtonElement>) => {
     const clickedButton = event.currentTarget;
 
     const courseId = clickedButton.dataset.id;
 
     try {
-      const res = await axiosClient.delete(
-        `/api/authentication/deleteCourse/${courseId}`
-      );
+      await axiosClient.delete(`/api/authentication/deleteCourse/${courseId}`);
+
+      setCourseData((prev) => prev.filter((course) => course._id !== courseId));
     } catch (error) {
       console.log(error);
     }
@@ -305,13 +331,31 @@ const LecturerDashboard = () => {
         setUserData(newRequest);
       });
 
+      socket.on("preferenceCreated", (updatedData) => {
+        setUserData((prev) => ({
+          ...prev,
+          preferredDays: updatedData.preferredDays,
+          preferredTimes: updatedData.preferredTimes,
+        }));
+      });
+
+      socket.on("preferenceUpdated", (updatedData) => {
+        setUserData((prev) => ({
+          ...prev,
+          preferredDays: updatedData.preferredDays,
+          preferredTimes: updatedData.preferredTimes,
+        }));
+      });
+
       return () => {
         socket.off("newAdminRequest");
+        socket.off("preferenceCreated");
+        socket.off("preferenceUpdated");
       };
     } catch (error) {
       console.log(error);
     }
-  }, [userData]);
+  }, []);
 
   useEffect(() => {
     const handleApproval = (data: any) => {
@@ -346,10 +390,14 @@ const LecturerDashboard = () => {
   useEffect(() => {
     const getCourses = async () => {
       try {
+        setCourseLoading(true);
         const res = await axiosClient.get("/api/authentication/getCourses");
-        setCourseData(res.data.courses);
+
+        setCourseData(res.data.courses || []);
       } catch (error) {
         console.log(error);
+      } finally {
+        setCourseLoading(false);
       }
     };
     getCourses();
@@ -358,10 +406,30 @@ const LecturerDashboard = () => {
       setCourseData((prevCourses) => [...prevCourses, newCourse]);
     };
 
+    const handleUpdatedCourse = (updatedCourse: courseDetail) => {
+      setCourseData((prevCourses) =>
+        prevCourses.map((c) =>
+          c._id === updatedCourse._id ? updatedCourse : c
+        )
+      );
+    };
+
+    const handleDeletedCourse = (deletedCourse: courseDetail) => {
+      if (deletedCourse && deletedCourse._id) {
+        setCourseData((prev) =>
+          prev.filter((req) => req._id !== deletedCourse._id)
+        );
+      }
+    };
+
     socket.on("courseAdded", handleNewCourses);
+    socket.on("courseUpdated", handleUpdatedCourse);
+    socket.on("courseDeleted", handleDeletedCourse);
 
     return () => {
       socket.off("courseAdded", handleNewCourses);
+      socket.off("courseUpdated", handleUpdatedCourse);
+      socket.off("courseDeleted", handleDeletedCourse);
     };
   }, []);
 
@@ -495,14 +563,34 @@ const LecturerDashboard = () => {
       </div>
 
       <div>
-        <h2>Edit Course</h2>
         {editShowMenu ? (
           <div>
             <div onClick={(e) => e.stopPropagation()}>
               <div>
                 <button onClick={() => setEditShowMenu(false)}>Close</button>
               </div>
-              <CourseModal courseDetails={courseEditDetails} />
+              <CourseModal
+                courseDetails={courseEditDetails}
+                closeModal={() => setEditShowMenu(false)}
+              />
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      <div>
+        {preferenceEditShowMenu ? (
+          <div>
+            <div onClick={(e) => e.stopPropagation()}>
+              <div>
+                <button onClick={() => setPreferenceEditShowMenu(false)}>
+                  Close
+                </button>
+              </div>
+              <PreferencesModal
+                preferencesDetails={preferencesEditDetails}
+                closeModal={() => setPreferenceEditShowMenu(false)}
+              />
             </div>
           </div>
         ) : null}
@@ -519,42 +607,67 @@ const LecturerDashboard = () => {
 
         <div>
           <h2>Lecturer Preferences</h2>
-          <div>{userData.preferredDays.join(", ")}</div>
-          <div>{userData.preferredTime.join(", ")}</div>
+
+          <div>
+            {!userData ? (
+              <h2>Loading...</h2>
+            ) : (
+              <div>
+                <div>
+                  <h3>Days: </h3>
+                  {(userData?.preferredDays || []).join(", ")}
+                </div>
+                <div>
+                  <h3>Times: </h3>
+                  {(userData?.preferredTimes || []).join(", ")}
+                </div>
+                <button type="button" onClick={() => handlePreferencesEdit()}>
+                  Edit Preference
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       <div>
         <h2>Lecturer Courses</h2>
+        {courseLoading ? <p>Loading Courses</p> : null}
         <div>
-          {courseData.map((index) => (
-            <div key={index._id}>
-              <div>{index.code}</div>
-              <div>{index.duration}</div>
-              <div>{index.expectedStudents}</div>
-              <div>{index.title}</div>
-              <div>{index.requiredResources}</div>
-              <div>{index.lecturer.username}</div>
-              <button
-                data-id={index._id}
-                type="button"
-                onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
-                  handleEdit(event)
-                }
-              >
-                Edit
-              </button>
-              <button
-                data-id={index._id}
-                type="button"
-                onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
-                  handleDelete(event)
-                }
-              >
-                Delete
-              </button>
+          {courseData.length === 0 ? (
+            <h1>No course found</h1>
+          ) : (
+            <div>
+              {courseData.map((index) => (
+                <div key={index._id}>
+                  <div>{index.code}</div>
+                  <div>{index.duration}</div>
+                  <div>{index.expectedStudents}</div>
+                  <div>{index.title}</div>
+                  <div>{index.requiredResources}</div>
+                  <div>{index.lecturer.username}</div>
+                  <button
+                    data-id={index._id}
+                    type="button"
+                    onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
+                      handleEdit(event)
+                    }
+                  >
+                    Edit
+                  </button>
+                  <button
+                    data-id={index._id}
+                    type="button"
+                    onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
+                      handleDelete(event)
+                    }
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       </div>
 

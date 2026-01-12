@@ -3,6 +3,7 @@ import axiosClient from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
+import VenueModal from "../components/VenueModal";
 
 interface AdminRequestType {
   _id: string;
@@ -69,6 +70,16 @@ const AdminDashboard = () => {
   });
   const [venueData, setVenueData] = useState<venueType[]>([]);
   const [timetableData, setTimetableData] = useState<timetableType[]>([]);
+  const [venueEditDetails, setVenueEditDetails] = useState<venueType>({
+    _id: "",
+    name: "",
+    capacity: "",
+    type: "",
+    resources: [],
+  });
+
+  const [editShowMenu, setEditShowMenu] = useState<boolean>(false);
+  const [venueLoading, setVenueLoading] = useState<boolean>(true);
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -135,6 +146,41 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleEdit = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    const clickedButton = event.currentTarget;
+
+    const venueId = clickedButton.dataset.id;
+
+    try {
+      const res = await axiosClient.get(`/api/admin/venueDetails/${venueId}`);
+
+      setVenueEditDetails({
+        _id: res.data.venue._id,
+        name: res.data.venue.name,
+        capacity: res.data.venue.capacity,
+        type: res.data.venue.type,
+        resources: res.data.venue.resources,
+      });
+      setEditShowMenu(true);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleDelete = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    const clickedButton = event.currentTarget;
+
+    const venueId = clickedButton.dataset.id;
+
+    try {
+      await axiosClient.delete(`/api/admin/deleteVenue/${venueId}`);
+
+      setVenueData((prev) => prev.filter((venue) => venue._id !== venueId));
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const handleLogout = () => {
     logout();
     console.log("Admin logged out successfully");
@@ -190,20 +236,43 @@ const AdminDashboard = () => {
       setCourseData((prevCourses) => [...prevCourses, newCourse]);
     };
 
+    const handleUpdatedCourse = (updatedCourse: courseType) => {
+      setCourseData((prevCourses) =>
+        prevCourses.map((c) =>
+          c._id === updatedCourse._id ? updatedCourse : c
+        )
+      );
+    };
+
+    const handleDeletedCourse = (deletedCourse: courseType) => {
+      if (deletedCourse && deletedCourse._id) {
+        setCourseData((prev) =>
+          prev.filter((req) => req._id !== deletedCourse._id)
+        );
+      }
+    };
+
     socket.on("courseAdded", handleNewCourses);
+    socket.on("courseUpdated", handleUpdatedCourse);
+    socket.on("courseDeleted", handleDeletedCourse);
 
     return () => {
       socket.off("courseAdded", handleNewCourses);
+      socket.off("courseUpdated", handleUpdatedCourse);
+      socket.off("courseDeleted", handleDeletedCourse);
     };
   }, []);
 
   useEffect(() => {
     const handleVenues = async () => {
       try {
+        setVenueLoading(true);
         const res = await axiosClient.get("/api/admin/getVenues");
         setVenueData(res.data.venues);
       } catch (error) {
         console.log(error);
+      } finally {
+        setVenueLoading(false);
       }
     };
     handleVenues();
@@ -212,10 +281,28 @@ const AdminDashboard = () => {
       setVenueData((prevVenues) => [...prevVenues, newVenues]);
     };
 
+    const handleUpdatedVenue = (updatedVenue: venueType) => {
+      setVenueData((prevVenues) =>
+        prevVenues.map((v) => (v._id === updatedVenue._id ? updatedVenue : v))
+      );
+    };
+
+    const handleDeletedVenue = (deletedVenue: venueType) => {
+      if (deletedVenue && deletedVenue._id) {
+        setCourseData((prev) =>
+          prev.filter((req) => req._id !== deletedVenue._id)
+        );
+      }
+    };
+
     socket.on("venueAdded", handleNewVenue);
+    socket.on("venueUpdated", handleUpdatedVenue);
+    socket.on("venueDeleted", handleDeletedVenue);
 
     return () => {
       socket.off("venueAdded", handleNewVenue);
+      socket.off("venueUpdated", handleUpdatedVenue);
+      socket.off("venueDeleted", handleDeletedVenue);
     };
   }, []);
 
@@ -265,7 +352,7 @@ const AdminDashboard = () => {
       </div>
 
       <div>
-        <h2>Form addition section</h2>
+        <h2>Venue addition section</h2>
         <form onSubmit={handleFormSubmit}>
           <div>
             <label>Name: </label>
@@ -327,14 +414,57 @@ const AdminDashboard = () => {
 
       <div>
         <h2>Venue section</h2>
-        {venueData.map((index) => (
-          <div key={index._id}>
-            <div>{index.name}</div>
-            <div>{index.capacity}</div>
-            <div>{index.type}</div>
-            <div>{index.resources}</div>
+        {venueLoading ? <p>Loading Venues</p> : null}
+        <div>
+          {venueData.length === 0 ? (
+            <h2>No venue found</h2>
+          ) : (
+            <div>
+              {venueData.map((index) => (
+                <div key={index._id}>
+                  <div>{index.name}</div>
+                  <div>{index.capacity}</div>
+                  <div>{index.type}</div>
+                  <div>{index.resources}</div>
+                  <button
+                    data-id={index._id}
+                    type="button"
+                    onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
+                      handleEdit(event)
+                    }
+                  >
+                    Edit
+                  </button>
+                  <button
+                    data-id={index._id}
+                    type="button"
+                    onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
+                      handleDelete(event)
+                    }
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div>
+        {editShowMenu ? (
+          <div>
+            <div onClick={(e) => e.stopPropagation()}>
+              <div>
+                <button onClick={() => setEditShowMenu(false)}>Close</button>
+              </div>
+              <VenueModal
+                venueDetails={venueEditDetails}
+                closeModal={() => setEditShowMenu(false)}
+              />
+            </div>
           </div>
-        ))}
+        ) : null}
       </div>
 
       <div>

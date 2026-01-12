@@ -12,9 +12,10 @@ interface courseType {
 
 type Props = {
   courseDetails: courseType;
+  closeModal: () => void;
 };
 
-const CourseModal: React.FC<Props> = ({ courseDetails }) => {
+const CourseModal: React.FC<Props> = ({ courseDetails, closeModal }) => {
   const [formData, setFormData] = useState<courseType>({
     _id: "",
     code: "",
@@ -45,14 +46,16 @@ const CourseModal: React.FC<Props> = ({ courseDetails }) => {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (event: React.ChangeEvent<HTMLFormElement>) => {
+    event.preventDefault();
     const courseId = courseDetails._id;
 
     try {
-      const res = await axiosClient.patch(
+      await axiosClient.patch(
         `/api/authentication/editCourse/${courseId}`,
         formData
       );
+      closeModal();
     } catch (error) {
       console.log(error);
     }
@@ -67,16 +70,10 @@ const CourseModal: React.FC<Props> = ({ courseDetails }) => {
       expectedStudents: courseDetails.expectedStudents,
       requiredResources: courseDetails.requiredResources,
     });
-  }, [
-    courseDetails._id,
-    courseDetails.code,
-    courseDetails.title,
-    courseDetails.duration,
-    courseDetails.expectedStudents,
-    courseDetails.requiredResources,
-  ]);
+  }, [courseDetails]);
   return (
     <div>
+      <h2>Edit Course</h2>
       <form onSubmit={handleSubmit}>
         <div>
           <div>
