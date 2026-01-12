@@ -54,7 +54,7 @@ const LecturerRegister = () => {
           <h1 className="text-2xl font-bold text-gray-800">
             Lecturer Registration
           </h1>
-          <p className="text-gray-500 text-sm mt-1">Create your new account</p>
+          <p className="text-gray-500 text-sm mt-1">Create Your Account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

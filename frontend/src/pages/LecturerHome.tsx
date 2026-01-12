@@ -7,7 +7,7 @@ const LecturerHome = () => {
       <div className="bg-white shadow-xl rounded-2xl w-full max-w-md p-8">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-800">Lecturer Portal</h1>
-          <p className="text-gray-500 mt-2">Manage your account</p>
+          <p className="text-gray-500 mt-2">Manage Your Account</p>
         </div>
         <div className="flex flex-col gap-4">
           <Link

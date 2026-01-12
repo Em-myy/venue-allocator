@@ -49,7 +49,7 @@ const LecturerLogin = () => {
       <div className="bg-white shadow-xl rounded-2xl w-full max-w-md p-8">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800">Lecturer Login</h1>
-          <p className="text-gray-500 text-sm mt-1">Access your dashboard</p>
+          <p className="text-gray-500 text-sm mt-1">Access Your Dashboard</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -137,39 +137,6 @@ const LecturerLogin = () => {
       </div>
     </div>
   );
-  {
-    /*
-    <div>
-      <h1>Login</h1>
-      <div>
-        <form onSubmit={handleSubmit}>
-          <div>
-            <div>
-              <label>E-mail</label>
-              <input
-                type="email"
-                placeholder="Lecturer E-Mail"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label>Password</label>
-              <input
-                type="password"
-                placeholder="Lecturer E-Mail"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-              />
-            </div>
-            <button>Submit</button>
-          </div>
-        </form>
-      </div>
-    </div> */
-  }
 };
 
 export default LecturerLogin;
