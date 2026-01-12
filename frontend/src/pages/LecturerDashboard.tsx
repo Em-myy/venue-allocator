@@ -5,6 +5,16 @@ import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import CourseModal from "../components/CourseModal";
 import PreferencesModal from "../components/PreferencesModal";
+import {
+  FaBookOpen,
+  FaClock,
+  FaEdit,
+  FaPlus,
+  FaSignOutAlt,
+  FaTimes,
+  FaTrash,
+  FaUserTie,
+} from "react-icons/fa";
 
 interface courseType {
   code: string;
@@ -433,247 +443,459 @@ const LecturerDashboard = () => {
     };
   }, []);
 
-  return (
-    <div>
-      <h1>Lecturer dashboard</h1>
+  const inputClass =
+    "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm";
+  const labelClass =
+    "block text-gray-700 text-xs font-bold mb-1 uppercase tracking-wide";
+  const cardClass = "bg-white shadow-md rounded-xl p-6 border border-gray-100";
+  const buttonPrimary =
+    "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 shadow-sm text-sm cursor-pointer";
 
-      <div>
-        <h2>Admin request</h2>
-        <div>
-          {userData.adminRequestStatus === "pending" ||
-          userData.adminRequestStatus === "approved" ? null : (
-            <div>
-              <form onSubmit={handleRequestSubmit}>
-                <div>
-                  <label>Admin Reason</label>
-                  <input
-                    type="text"
-                    onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                      setReason(event.target.value)
-                    }
-                    value={reason}
-                    name="reason"
-                  />
-                </div>
-                <button>Submit</button>
-              </form>
+  return (
+    <div className="min-h-screen bg-gray-50 pb-12">
+      <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center gap-2">
+              <div className="bg-blue-600 text-white p-2 rounded-lg">
+                <FaUserTie />
+              </div>
+              <h1 className="text-xl font-bold text-gray-800">
+                Lecturer Dashboard
+              </h1>
             </div>
-          )}
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 text-gray-500 hover:text-red-600 font-medium transition cursor-pointer"
+            >
+              <span>Logout</span> <FaSignOutAlt />
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="space-y-8 lg:col-span-1">
+            <div className={cardClass}>
+              <h2 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">
+                My Profile
+              </h2>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-500 text-sm">Name:</span>
+                  <span className="font-semibold text-gray-800">
+                    {userData.name}
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-gray-500 text-sm">Role:</span>
+                  <span
+                    className={`font-semibold px-2 py-0.5 rounded text-xs uppercase ${
+                      userData.role === "admin"
+                        ? "bg-purple-100 text-purple-700"
+                        : "bg-blue-100 text-blue-700"
+                    }`}
+                  >
+                    {userData.role}
+                  </span>
+                </div>
+
+                {userData.adminRequestStatus && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500 text-sm">
+                      Admin Request:
+                    </span>
+                    <span
+                      className={`font-semibold px-2 py-0.5 rounded text-xs uppercase 
+                        ${
+                          userData.adminRequestStatus === "approved"
+                            ? "bg-green-100 text-green-700"
+                            : userData.adminRequestStatus === "rejected"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-yellow-100 text-yellow-700"
+                        }`}
+                    >
+                      {userData.adminRequestStatus}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className={cardClass}>
+              <div className="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 className="text-lg font-bold text-gray-800 ">
+                  Availability
+                </h2>
+                <button
+                  onClick={() => handlePreferencesEdit()}
+                  className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1 cursor-pointer"
+                >
+                  <FaEdit /> Edit
+                </button>
+              </div>
+
+              {!userData ? (
+                <p className="text-gray-400 text-sm">Loading...</p>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-xs font-bold text-gray-400 uppercase mb-1 flex items-center gap-1">
+                      <FaBookOpen size={10} /> Days
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {(userData?.preferredDays || []).length > 0 ? (
+                        userData.preferredDays.map((day, i) => (
+                          <span
+                            key={i}
+                            className="bg-gray-100 text-gray-700 px-2 py-1 rounded-md text-xs font-medium border"
+                          >
+                            {day}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-sm text-gray-400 italic">
+                          No days set
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xs font-bold text-gray-400 uppercase mb-1 flex items-center gap-1">
+                      <FaClock size={10} /> Times
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {(userData?.preferredTimes || []).length > 0 ? (
+                        userData.preferredTimes.map((time, i) => (
+                          <span
+                            key={i}
+                            className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs font-medium border border-blue-100"
+                          >
+                            {time}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-sm text-gray-400 italic">
+                          No times set
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {userData.adminRequestStatus !== "pending" &&
+              userData.adminRequestStatus !== "approved" && (
+                <div className={`${cardClass} bg-yellow-50 border-yellow-200`}>
+                  <h2 className="text-lg font-bold text-yellow-800 mb-2">
+                    Request Admin Access
+                  </h2>
+                  <form
+                    onSubmit={handleRequestSubmit}
+                    className="flex flex-col gap-2 "
+                  >
+                    <input
+                      type="text"
+                      className="flex-1 px-3 py-2 text-sm border border-yellow-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      placeholder="Reason for request..."
+                      onChange={(e) => setReason(e.target.value)}
+                      value={reason}
+                      name="reason"
+                      required
+                    />
+                    <button className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition cursor-pointer">
+                      Send
+                    </button>
+                  </form>
+                  {msg && (
+                    <p className="text-xs text-green-600 mt-2 font-semibold">
+                      {msg}
+                    </p>
+                  )}
+                </div>
+              )}
+          </div>
+
+          <div className="lg:col-span-2 space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className={cardClass}>
+                <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <span className="bg-blue-100 text-blue-600 p-1.5 rounded-lg">
+                    <FaPlus size={12} />
+                  </span>{" "}
+                  Add Course
+                </h2>
+                <form onSubmit={handleCoursesSubmit} className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={labelClass}>Code</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. CSC101"
+                        value={formData.code}
+                        name="code"
+                        onChange={handleChange}
+                        className={inputClass}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Duration (Hrs)</label>
+                      <input
+                        type="number"
+                        placeholder="2"
+                        value={formData.duration ?? ""}
+                        name="duration"
+                        onChange={handleChange}
+                        className={inputClass}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>Course Title</label>
+                    <input
+                      type="text"
+                      placeholder="Intro to Computer Science"
+                      value={formData.title}
+                      name="title"
+                      onChange={handleChange}
+                      className={inputClass}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Expected Students</label>
+                    <input
+                      type="number"
+                      placeholder="100"
+                      value={formData.expectedStudents ?? ""}
+                      name="expectedStudents"
+                      onChange={handleChange}
+                      className={inputClass}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>
+                      Resources (Comma separated)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Projector, HDMI..."
+                      value={
+                        formData.requiredResources
+                          ? formData.requiredResources.join(",")
+                          : ""
+                      }
+                      name="requiredResources"
+                      onChange={handleResourcesChange}
+                      className={inputClass}
+                    />
+                  </div>
+                  <button type="submit" className={buttonPrimary}>
+                    Add Course
+                  </button>
+                </form>
+              </div>
+
+              <div className={cardClass}>
+                <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <span className="bg-green-100 text-green-600 p-1.5 rounded-lg">
+                    <FaClock size={12} />
+                  </span>{" "}
+                  Set Preferences
+                </h2>
+                <p className="text-xs text-gray-500 mb-4">
+                  Update your availability for scheduling.
+                </p>
+                <form onSubmit={handlePreferencesSubmit} className="space-y-4">
+                  <div>
+                    <label className={labelClass}>Preferred Days</label>
+                    <input
+                      type="text"
+                      placeholder="Monday, Wednesday..."
+                      name="preferredDays"
+                      value={
+                        preferencesForm.preferredDays
+                          ? preferencesForm.preferredDays.join(",")
+                          : ""
+                      }
+                      onChange={handleDayChange}
+                      className={inputClass}
+                    />
+                    <p className="text-[10px] text-gray-400 mt-1">
+                      Separate days with commas
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>Preferred Times</label>
+                    <input
+                      type="text"
+                      placeholder="9am, 2pm..."
+                      name="preferredTimes"
+                      value={
+                        preferencesForm.preferredTimes
+                          ? preferencesForm.preferredTimes.join(",")
+                          : ""
+                      }
+                      onChange={handleTimeChange}
+                      className={inputClass}
+                    />
+                    <p className="text-[10px] text-gray-400 mt-1">
+                      Separate times with commas
+                    </p>
+                  </div>
+                  <button
+                    type="submit"
+                    className={`${buttonPrimary} bg-green-600 hover:bg-green-700`}
+                  >
+                    Update Preferences
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                My Courses
+              </h2>
+
+              {courseLoading && (
+                <div className="text-center py-8 text-gray-500">
+                  Loading courses...
+                </div>
+              )}
+
+              {!courseLoading && courseData.length === 0 && (
+                <div className="bg-white border-2 border-dashed border-gray-300 rounded-xl p-12 text-center text-gray-400">
+                  <p>No courses added yet.</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {courseData.map((course) => (
+                  <div
+                    key={course._id}
+                    className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition duration-200 relative group"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">
+                          {course.code}
+                        </span>
+                        <h3 className="text-lg font-bold text-gray-800 mt-2 leading-tight">
+                          {course.title}
+                        </h3>
+                      </div>
+
+                      <div className="text-right">
+                        <span className="block text-xl font-bold text-gray-700">
+                          {course.expectedStudents}
+                        </span>
+                        <span className="text-xs text-gray-400">Students</span>
+                      </div>
+                    </div>
+
+                    <div className="text-sm text-gray-500 mt-3 space-y-1">
+                      <p>
+                        <strong className="text-gray-700">Duration:</strong>{" "}
+                        {course.duration} hours
+                      </p>
+                      <p>
+                        <strong className="text-gray-700">Resources:</strong>{" "}
+                        {course.requiredResources?.join(", ") || "None"}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-2">
+                        Lecturer: {course.lecturer.username}
+                      </p>
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-gray-100 flex gap-3">
+                      <button
+                        data-id={course._id}
+                        onClick={handleEdit}
+                        className="flex-1 flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-700 py-2 rounded-lg text-sm font-semibold transition cursor-pointer"
+                      >
+                        <FaEdit /> Edit
+                      </button>
+                      <button
+                        data-id={course._id}
+                        onClick={handleDelete}
+                        className="flex-1 flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 py-2 rounded-lg text-sm font-semibold transition cursor-pointer"
+                      >
+                        <FaTrash /> Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div>
-        <h2>Submit courses</h2>
-        <form onSubmit={handleCoursesSubmit}>
-          <div>
-            <div>
-              <label>Course code: </label>
-              <input
-                type="text"
-                placeholder="course code"
-                value={formData.code}
-                name="code"
-                onChange={handleChange}
-              />
+      {editShowMenu && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 backdrop-blur-sm"
+          onClick={() => setEditShowMenu(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
+              <h3 className="font-bold text-gray-700">Edit Course</h3>
+              <button
+                onClick={() => setEditShowMenu(false)}
+                className="text-gray-400 hover:text-gray-600 transition cursor-pointer"
+              >
+                <FaTimes size={20} />
+              </button>
             </div>
-            <div>
-              <label>Course title: </label>
-              <input
-                type="text"
-                placeholder="course title"
-                value={formData.title}
-                name="title"
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label>Expected Students: </label>
-              <input
-                type="number"
-                placeholder="number of students for the course"
-                value={formData.expectedStudents ?? ""}
-                name="expectedStudents"
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label>Duration: </label>
-              <input
-                type="number"
-                placeholder="duration of the course"
-                value={formData.duration ?? ""}
-                name="duration"
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label>Resources: </label>
-              <input
-                type="text"
-                placeholder="resources needed"
-                value={
-                  formData.requiredResources
-                    ? formData.requiredResources.join(",")
-                    : ""
-                }
-                name="requiredResources"
-                onChange={handleResourcesChange}
-              />
-            </div>
-          </div>
-          <button type="submit">Submit</button>
-        </form>
-      </div>
-
-      <div>
-        <h1>Submit Preferences</h1>
-        <form onSubmit={handlePreferencesSubmit}>
-          <div>
-            <div>
-              <label>Preferred Day</label>
-              <input
-                type="text"
-                placeholder="Enter the day in full name"
-                name="preferredDays"
-                value={
-                  preferencesForm.preferredDays
-                    ? preferencesForm.preferredDays.join(",")
-                    : ""
-                }
-                onChange={handleDayChange}
-              />
-            </div>
-            <div>
-              <label>Preferred Time</label>
-              <input
-                type="text"
-                placeholder="Enter the time in digit"
-                name="preferredTimes"
-                value={
-                  preferencesForm.preferredTimes
-                    ? preferencesForm.preferredTimes.join(",")
-                    : ""
-                }
-                onChange={handleTimeChange}
-              />
-            </div>
-            <button type="submit">Submit</button>
-          </div>
-        </form>
-      </div>
-
-      <div>
-        {editShowMenu ? (
-          <div>
-            <div onClick={(e) => e.stopPropagation()}>
-              <div>
-                <button onClick={() => setEditShowMenu(false)}>Close</button>
-              </div>
+            <div className="p-6">
               <CourseModal
                 courseDetails={courseEditDetails}
                 closeModal={() => setEditShowMenu(false)}
               />
             </div>
           </div>
-        ) : null}
-      </div>
+        </div>
+      )}
 
-      <div>
-        {preferenceEditShowMenu ? (
-          <div>
-            <div onClick={(e) => e.stopPropagation()}>
-              <div>
-                <button onClick={() => setPreferenceEditShowMenu(false)}>
-                  Close
-                </button>
-              </div>
+      {preferenceEditShowMenu && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 backdrop-blur-sm"
+          onClick={() => setPreferenceEditShowMenu(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
+              <h3 className="font-bold text-gray-700">Edit Preferences</h3>
+              <button
+                onClick={() => setPreferenceEditShowMenu(false)}
+                className="text-gray-400 hover:text-gray-600 transition"
+              >
+                <FaTimes size={20} />
+              </button>
+            </div>
+            <div className="p-6">
               <PreferencesModal
                 preferencesDetails={preferencesEditDetails}
                 closeModal={() => setPreferenceEditShowMenu(false)}
               />
             </div>
           </div>
-        ) : null}
-      </div>
-
-      <div>
-        <div>
-          <h2>Lecturer Detail</h2>
-          <div>{userData.name}</div>
-          <div>{userData.role}</div>
-          <div>{userData.adminRequestReason}</div>
-          <div>{userData.adminRequestStatus}</div>
         </div>
-
-        <div>
-          <h2>Lecturer Preferences</h2>
-
-          <div>
-            {!userData ? (
-              <h2>Loading...</h2>
-            ) : (
-              <div>
-                <div>
-                  <h3>Days: </h3>
-                  {(userData?.preferredDays || []).join(", ")}
-                </div>
-                <div>
-                  <h3>Times: </h3>
-                  {(userData?.preferredTimes || []).join(", ")}
-                </div>
-                <button type="button" onClick={() => handlePreferencesEdit()}>
-                  Edit Preference
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <h2>Lecturer Courses</h2>
-        {courseLoading ? <p>Loading Courses</p> : null}
-        <div>
-          {courseData.length === 0 ? (
-            <h1>No course found</h1>
-          ) : (
-            <div>
-              {courseData.map((index) => (
-                <div key={index._id}>
-                  <div>{index.code}</div>
-                  <div>{index.duration}</div>
-                  <div>{index.expectedStudents}</div>
-                  <div>{index.title}</div>
-                  <div>{index.requiredResources}</div>
-                  <div>{index.lecturer.username}</div>
-                  <button
-                    data-id={index._id}
-                    type="button"
-                    onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
-                      handleEdit(event)
-                    }
-                  >
-                    Edit
-                  </button>
-                  <button
-                    data-id={index._id}
-                    type="button"
-                    onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
-                      handleDelete(event)
-                    }
-                  >
-                    Delete
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <button type="button" onClick={handleLogout}>
-        Logout
-      </button>
+      )}
     </div>
   );
 };

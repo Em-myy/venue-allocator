@@ -143,49 +143,6 @@ const AdminRegister = () => {
       </div>
     </div>
   );
-  {
-    /*
-    <div>
-      <div>AdminRegister</div>
-      <div>
-        <form onSubmit={handleSubmit}>
-          <div>
-            <div>
-              <label>Username: </label>
-              <input
-                type="text"
-                placeholder="Admin Username"
-                value={formData.username}
-                name="username"
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label>E-Mail: </label>
-              <input
-                type="email"
-                placeholder="Admin Mail"
-                value={formData.email}
-                name="email"
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label>Password: </label>
-              <input
-                type="password"
-                value={formData.password}
-                name="password"
-                onChange={handleChange}
-              />
-            </div>
-            <button>Submit</button>
-          </div>
-        </form>
-      </div>
-      <div>{msg}</div>
-    </div> */
-  }
 };
 
 export default AdminRegister;

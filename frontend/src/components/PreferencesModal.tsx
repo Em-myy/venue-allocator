@@ -39,6 +39,8 @@ const PreferencesModal: React.FC<Props> = ({
     preferredDays: [],
     preferredTimes: [],
   });
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [msg, setMsg] = useState<string>("");
 
   const handleTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const val = event.target.value;
@@ -69,6 +71,7 @@ const PreferencesModal: React.FC<Props> = ({
     event: React.ChangeEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
+    setIsLoading(true);
 
     const formattedDays = preferencesForm.preferredDays.map((day) =>
       day.trim().toUpperCase()
@@ -84,9 +87,13 @@ const PreferencesModal: React.FC<Props> = ({
     };
     try {
       await axiosClient.patch("/api/authentication/editPreferences", payload);
-      closeModal();
+      setMsg("Preference Updated Successfully");
+      setTimeout(() => {
+        closeModal();
+      }, 3000);
     } catch (error) {
-      console.log(error);
+      setMsg("Error In Updating Preference");
+      setIsLoading(false);
     }
   };
 
@@ -96,42 +103,85 @@ const PreferencesModal: React.FC<Props> = ({
       preferredTimes: preferencesDetails.preferredTimes || [],
     });
   }, [preferencesDetails]);
+
+  const labelClass =
+    "block text-gray-700 text-xs font-bold mb-1 uppercase tracking-wide";
+  const inputClass =
+    "w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm";
+
   return (
     <div>
-      <h1>Edit Preferences</h1>
-      <form onSubmit={handlePreferencesSubmit}>
+      <form onSubmit={handlePreferencesSubmit} className="space-y-6">
         <div>
-          <div>
-            <label>Preferred Day</label>
-            <input
-              type="text"
-              placeholder="Enter the day in full name"
-              name="preferredDays"
-              value={
-                preferencesForm.preferredDays
-                  ? preferencesForm.preferredDays.join(",")
-                  : ""
-              }
-              onChange={handleDayChange}
-            />
-          </div>
-          <div>
-            <label>Preferred Time</label>
-            <input
-              type="text"
-              placeholder="Enter the time in digit"
-              name="preferredTimes"
-              value={
-                preferencesForm.preferredTimes
-                  ? preferencesForm.preferredTimes.join(",")
-                  : ""
-              }
-              onChange={handleTimeChange}
-            />
-          </div>
-          <button type="submit">Edit Preferences</button>
+          <label className={labelClass}>Preferred Day</label>
+          <input
+            type="text"
+            placeholder="Monday, Wednesday, Friday"
+            name="preferredDays"
+            value={
+              preferencesForm.preferredDays
+                ? preferencesForm.preferredDays.join(",")
+                : ""
+            }
+            onChange={handleDayChange}
+            className={inputClass}
+          />
+          <p className="text-[10px] text-gray-400 mt-1">
+            Enter days separated by commas (e.g., Mon, Tue).
+          </p>
+        </div>
+
+        <div>
+          <label className={labelClass}>Preferred Time</label>
+          <input
+            type="text"
+            placeholder="Enter the time in digit"
+            name="preferredTimes"
+            value={
+              preferencesForm.preferredTimes
+                ? preferencesForm.preferredTimes.join(",")
+                : ""
+            }
+            onChange={handleTimeChange}
+            className={inputClass}
+          />
+          <p className="text-[10px] text-gray-400 mt-1">
+            Enter start times separated by commas (e.g., 9am, 2pm).
+          </p>
+        </div>
+
+        <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-2">
+          <button
+            type="button"
+            onClick={closeModal}
+            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold transition cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={`px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold shadow-sm transition
+                ${
+                  isLoading ? "opacity-70 cursor-not-allowed" : "cursor-pointer"
+                }`}
+          >
+            {isLoading ? "Saving..." : "Save Preferences"}
+          </button>
         </div>
       </form>
+
+      {msg && (
+        <div
+          className={`mt-4 p-3 text-center rounded-lg text-sm font-medium border ${
+            isLoading
+              ? "bg-green-100 text-green-700 border-green-200"
+              : "bg-red-100 text-red-700 border-red-200"
+          } `}
+        >
+          {msg}
+        </div>
+      )}
     </div>
   );
 };
