@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axiosClient from "../api/axios";
 import { Link, useNavigate } from "react-router-dom";
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaEye, FaEyeSlash } from "react-icons/fa";
 
 interface formType {
   username: string;
@@ -17,6 +17,7 @@ const LecturerRegister = () => {
   });
   const [msg, setMsg] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isShowing, setIsShowing] = useState<boolean>(false);
   const navigate = useNavigate();
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,12 +35,16 @@ const LecturerRegister = () => {
       );
       setMsg(res.data.msg);
       setTimeout(() => {
-        navigate("/lecturerDashboard");
+        navigate("/lecturerLogin");
       }, 3000);
     } catch (error) {
-      console.log(error);
+      setMsg("Error In registering user");
       setIsLoading(false);
     }
+  };
+
+  const handleVisibility = () => {
+    setIsShowing((prev) => !prev);
   };
 
   return (
@@ -87,15 +92,24 @@ const LecturerRegister = () => {
             <label className="block text-gray-700 text-sm font-semibold mb-2">
               Password
             </label>
-            <input
-              type="password"
-              placeholder="Create a password"
-              value={formData.password}
-              name="password"
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              required
-            />
+            <div className="relative">
+              <input
+                type={isShowing ? "text" : "password"}
+                placeholder="Create a password"
+                value={formData.password}
+                name="password"
+                onChange={handleChange}
+                className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                required
+              />
+              <button
+                onClick={handleVisibility}
+                type="button"
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 cursor-pointer"
+              >
+                {isShowing ? <FaEye size={20} /> : <FaEyeSlash size={20} />}
+              </button>
+            </div>
           </div>
 
           <button
@@ -112,7 +126,13 @@ const LecturerRegister = () => {
         </form>
 
         {msg && (
-          <div className="mt-4 p-3 bg-green-100 text-green-700 text-center rounded-lg text-sm font-medium border border-green-200">
+          <div
+            className={`mt-4 p-3 text-center rounded-lg text-sm font-medium border ${
+              isLoading
+                ? "bg-green-100 text-green-700 border-green-200"
+                : "bg-red-100 text-red-700 border-red-200"
+            } `}
+          >
             {msg}
           </div>
         )}

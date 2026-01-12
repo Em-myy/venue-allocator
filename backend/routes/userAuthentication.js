@@ -47,7 +47,7 @@ router.post("/register", async (req, res) => {
 
     res.status(200).json({ msg: "Registration Successful" });
   } catch (error) {
-    console.log(error);
+    res.status(404).json({ msg: "Error registering user" });
   }
 });
 
@@ -87,7 +87,7 @@ router.post("/login", async (req, res) => {
 
     res.status(200).json({ msg: "Login Successful" });
   } catch (error) {
-    console.log(error);
+    res.status(404).json({ msg: "Error Logging in" });
   }
 });
 
