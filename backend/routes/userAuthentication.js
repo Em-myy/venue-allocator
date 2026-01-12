@@ -45,7 +45,7 @@ router.post("/register", async (req, res) => {
       path: "/",
     });
 
-    res.status(200).json({ msg: "Registered Successful" });
+    res.status(200).json({ msg: "Registration Successful" });
   } catch (error) {
     console.log(error);
   }
