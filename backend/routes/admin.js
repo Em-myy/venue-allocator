@@ -205,6 +205,25 @@ router.delete("/deleteVenue/:id", AuthMiddleware, async (req, res) => {
   }
 });
 
+router.delete("/deleteCourse/:id", AuthMiddleware, async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    const course = await Course.findByIdAndDelete(id);
+
+    if (!course) {
+      return res.status(404).json({ msg: "COurse not found" });
+    }
+
+    req.io.emit("adminCourseDeleted", course);
+
+    res.status(201).json({ msg: "Course deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(404).json({ msg: "Error deleting venue" });
+  }
+});
+
 router.get("/generate", async (req, res) => {
   try {
     const result = await GenerateTimetable();

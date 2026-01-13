@@ -202,6 +202,18 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleDeleteCourse = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this course?")) return;
+
+    try {
+      await axiosClient.delete(`/api/admin/deleteCourse/${id}`);
+
+      setCourseData((prev) => prev.filter((course) => course._id !== id));
+    } catch (error) {
+      setMsg("Error in deleting course");
+    }
+  };
+
   const handleLogout = () => {
     logout();
     console.log("Admin logged out successfully");
@@ -276,11 +288,13 @@ const AdminDashboard = () => {
     socket.on("courseAdded", handleNewCourses);
     socket.on("courseUpdated", handleUpdatedCourse);
     socket.on("courseDeleted", handleDeletedCourse);
+    socket.on("adminCourseDeleted", handleDeleteCourse);
 
     return () => {
       socket.off("courseAdded", handleNewCourses);
       socket.off("courseUpdated", handleUpdatedCourse);
       socket.off("courseDeleted", handleDeletedCourse);
+      socket.off("adminCourseDeleted", handleDeleteCourse);
     };
   }, []);
 
@@ -552,6 +566,7 @@ const AdminDashboard = () => {
                       <th className="px-4 py-3">Students</th>
                       <th className="px-4 py-3">Duration</th>
                       <th className="px-4 py-3">Lecturer</th>
+                      <th className="px-4 py-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -584,6 +599,15 @@ const AdminDashboard = () => {
                           </td>
                           <td className="px-4 py-3 text-gray-500 italic">
                             {course.lecturer?.username}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <button
+                              onClick={() => handleDeleteCourse(course._id)}
+                              className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-full transition duration-200 cursor-pointer"
+                              title="Delete Course"
+                            >
+                              <FaTrash size={14} />
+                            </button>
                           </td>
                         </tr>
                       ))
@@ -690,169 +714,6 @@ const AdminDashboard = () => {
       )}
     </div>
   );
-  {
-    /*
-    <div>
-      <h1>Admin Dashboard</h1>
-
-      <div>
-        <h2>Admin approval section</h2>
-        {candidateData.map((index) => (
-          <div key={index._id}>
-            <div>{index.email}</div>
-            <div>{index.role}</div>
-            <div>{index.adminRequestReason}</div>
-            <div>{index.adminRequestStatus}</div>
-
-            <button type="button" onClick={() => handleApprove(index._id)}>
-              Approve
-            </button>
-            <button type="button" onClick={() => handleReject(index._id)}>
-              Reject
-            </button>
-          </div>
-        ))}
-      </div>
-
-      <div>
-        <h2>Venue addition section</h2>
-        <form onSubmit={handleFormSubmit}>
-          <div>
-            <label>Name: </label>
-            <input
-              type="text"
-              placeholder="Venue name"
-              name="name"
-              value={formData.name}
-              onChange={handleFormChange}
-            />
-          </div>
-          <div>
-            <label>Capacity: </label>
-            <input
-              type="text"
-              placeholder="Capacity"
-              name="capacity"
-              value={formData.capacity}
-              onChange={handleFormChange}
-            />
-          </div>
-          <div>
-            <label>Type: </label>
-            <input
-              type="text"
-              placeholder="Venue type"
-              name="type"
-              value={formData.type}
-              onChange={handleFormChange}
-            />
-          </div>
-          <div>
-            <label>Resources: </label>
-            <input
-              type="text"
-              placeholder="Resources"
-              name="resources"
-              value={formData.resources}
-              onChange={handleResourcesChange}
-            />
-          </div>
-          <button type="submit">Create Venue</button>
-        </form>
-      </div>
-
-      <div>
-        <h2>Courses section</h2>
-        {courseData.map((index) => (
-          <div key={index._id}>
-            <div>{index.code}</div>
-            <div>{index.duration}</div>
-            <div>{index.expectedStudents}</div>
-            <div>{index.title}</div>
-            <div>{index.requiredResources}</div>
-            <div>{index.lecturer?.username || "Unknown Lecturer"}</div>
-          </div>
-        ))}
-      </div>
-
-      <div>
-        <h2>Venue section</h2>
-        {venueLoading ? <p>Loading Venues</p> : null}
-        <div>
-          {venueData.length === 0 ? (
-            <h2>No venue found</h2>
-          ) : (
-            <div>
-              {venueData.map((index) => (
-                <div key={index._id}>
-                  <div>{index.name}</div>
-                  <div>{index.capacity}</div>
-                  <div>{index.type}</div>
-                  <div>{index.resources}</div>
-                  <button
-                    data-id={index._id}
-                    type="button"
-                    onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
-                      handleEdit(event)
-                    }
-                  >
-                    Edit
-                  </button>
-                  <button
-                    data-id={index._id}
-                    type="button"
-                    onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
-                      handleDelete(event)
-                    }
-                  >
-                    Delete
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div>
-        {editShowMenu ? (
-          <div>
-            <div onClick={(e) => e.stopPropagation()}>
-              <div>
-                <button onClick={() => setEditShowMenu(false)}>Close</button>
-              </div>
-              <VenueModal
-                venueDetails={venueEditDetails}
-                closeModal={() => setEditShowMenu(false)}
-              />
-            </div>
-          </div>
-        ) : null}
-      </div>
-
-      <div>
-        <h2>Timetable section</h2>
-        <button onClick={handleTimetable}>Create Timetable</button>
-
-        {timetableData.map((index) => (
-          <div key={index._id}>
-            <div>{index.course.title}</div>
-            <div>{index.course.code}</div>
-            <div>{index.venue.name}</div>
-            <div>{index.day}</div>
-            <div>{index.startTime}</div>
-            <div>{index.endTime}</div>
-          </div>
-        ))}
-      </div>
-
-      <div>{msg}</div>
-      <button type="button" onClick={handleLogout}>
-        Logout
-      </button>
-    </div>
-  ); */
-  }
 };
 
 export default AdminDashboard;

@@ -437,11 +437,13 @@ const LecturerDashboard = () => {
     socket.on("courseAdded", handleNewCourses);
     socket.on("courseUpdated", handleUpdatedCourse);
     socket.on("courseDeleted", handleDeletedCourse);
+    socket.on("adminCourseDeleted", handleDeletedCourse);
 
     return () => {
       socket.off("courseAdded", handleNewCourses);
       socket.off("courseUpdated", handleUpdatedCourse);
       socket.off("courseDeleted", handleDeletedCourse);
+      socket.off("adminCourseDeleted", handleDeletedCourse);
     };
   }, []);
 
