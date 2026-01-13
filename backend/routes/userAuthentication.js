@@ -354,11 +354,9 @@ router.get("/getTimetable", AuthMiddleware, async (req, res) => {
   try {
     const lecturerId = req.user._id;
 
-    // First get all courses for this lecturer
     const courses = await Course.find({ lecturer: lecturerId });
     const courseIds = courses.map((c) => c._id);
 
-    // Then get timetables for only those courses
     const timetable = await Timetable.find({ course: { $in: courseIds } })
       .populate("course", "title code")
       .populate("venue", "name");

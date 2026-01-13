@@ -72,6 +72,24 @@ const apiUrl: string = import.meta.env.VITE_BACKEND_URL;
 
 const socket = io(apiUrl);
 
+const CHART_COLORS = [
+  "#4f46e5", // Indigo
+  "#ef4444", // Red
+  "#10b981", // Emerald
+  "#f59e0b", // Amber
+  "#8b5cf6", // Violet
+  "#06b6d4", // Cyan
+  "#ec4899", // Pink
+  "#6366f1", // Indigo
+  "#14b8a6", // Teal
+  "#f97316", // Orange
+  "#6d28d9", // Violet
+  "#0891b2", // Cyan
+  "#d946ef", // Fuchsia
+  "#ea580c", // Orange
+  "#16a34a", // Green
+];
+
 const AdminDashboard = () => {
   const [candidateData, setCandidateData] = useState<AdminRequestType[]>([]);
   const [msg, setMsg] = useState<string>("");
@@ -403,7 +421,7 @@ const AdminDashboard = () => {
       .sort((a, b) => b.allocations - a.allocations);
   }, [timetableData]);
 
-  const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+  const daysOfWeek = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 
   const cardClass = "bg-white shadow-md rounded-xl p-6 border border-gray-200";
   const headerClass =
@@ -578,6 +596,9 @@ const AdminDashboard = () => {
                             {venue.type} • Cap: {venue.capacity}
                           </p>
                         </div>
+                        <p className="font-bold text-gray-800 text-sm">
+                          Resources - {venue.resources.join(", ")}
+                        </p>
                         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             data-id={venue._id}
@@ -713,7 +734,7 @@ const AdminDashboard = () => {
                   {chartData.map((_, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={index % 2 === 0 ? "#4f46e5" : "#6366f1"}
+                      fill={CHART_COLORS[index % CHART_COLORS.length]}
                     />
                   ))}
                 </Pie>
@@ -743,7 +764,7 @@ const AdminDashboard = () => {
                         ${
                           isGenerating
                             ? "bg-gray-400 cursor-wait"
-                            : "bg-blue-600 hover:bg-blue-700"
+                            : "bg-blue-600 hover:bg-blue-700 cursor-pointer"
                         }`}
             >
               {isGenerating ? "Processing..." : "Generate Timetable"}
@@ -754,7 +775,9 @@ const AdminDashboard = () => {
             <div className="min-w-[800px] grid grid-cols-5 gap-4">
               {daysOfWeek.map((day) => {
                 const daysEvents = timetableData
-                  .filter((t) => t.day.toLowerCase() === day.toLowerCase())
+                  .filter(
+                    (t) => t.day && t.day.toLowerCase() === day.toLowerCase()
+                  )
                   .sort((a, b) => a.startTime - b.startTime);
 
                 return (

@@ -239,7 +239,6 @@ const LecturerDashboard = () => {
 
       setCourseButtonLoading(false);
     } catch (error) {
-      console.log(error);
       setCourseButtonLoading(false);
     }
   };
@@ -512,8 +511,14 @@ const LecturerDashboard = () => {
     };
     getTimetable();
 
-    const handleNewTimetable = (newTimetable: timetableType) => {
-      setTimetableData((prev) => [...prev, newTimetable]);
+    const handleNewTimetable = (data: any) => {
+      if (Array.isArray(data)) {
+        setTimetableData(data);
+      } else if (data.timetable && Array.isArray(data.timetable)) {
+        setTimetableData(data.timetable);
+      } else {
+        setTimetableData((prev) => [...prev, data]);
+      }
     };
     socket.on("timetableUpdated", handleNewTimetable);
 
@@ -528,7 +533,7 @@ const LecturerDashboard = () => {
     return courseData.some((myCourse) => myCourse.code === course.code);
   });
 
-  const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+  const daysOfWeek = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 
   const isExpanded =
     userData.adminRequestStatus === "pending" ||

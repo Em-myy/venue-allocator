@@ -140,7 +140,6 @@ export const GenerateTimetable = async (req, res) => {
           endTime: bestSlot.time + course.duration,
         });
       } else {
-        console.log(`--> FAILED: Could not find slot for ${course.code}`);
         unallocated.push(course.code);
       }
     }
@@ -148,13 +147,12 @@ export const GenerateTimetable = async (req, res) => {
     const finalSchedule = schedule.map(({ lecturerId, ...rest }) => rest);
     const savedTimetable = await Timetable.insertMany(finalSchedule);
 
-    console.log("Timetable generated successfully");
-    console.log(
-      `DONE. Scheduled: ${schedule.length}, Failed: ${unallocated.length}`
-    );
+    const populatedTimetable = await Timetable.find()
+      .populate("course", "title code")
+      .populate("venue", "name");
 
     return {
-      generated: savedTimetable,
+      generated: populatedTimetable,
       unallocated: unallocated,
     };
   } catch (error) {
