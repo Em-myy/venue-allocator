@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axiosClient from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +8,7 @@ import {
   FaBuilding,
   FaCalendarAlt,
   FaChalkboardTeacher,
+  FaChartBar,
   FaCheck,
   FaEdit,
   FaPlus,
@@ -15,6 +16,8 @@ import {
   FaTimes,
   FaTrash,
 } from "react-icons/fa";
+import { PieChart, Pie, Tooltip, Legend, Cell } from "recharts";
+import ConfirmModal from "../components/ConfirmModal";
 
 interface AdminRequestType {
   _id: string;
@@ -62,7 +65,7 @@ interface timetableType {
   };
   venue: {
     name: string;
-  };
+  } | null;
 }
 
 const apiUrl: string = import.meta.env.VITE_BACKEND_URL;
@@ -93,6 +96,12 @@ const AdminDashboard = () => {
   const [venueLoading, setVenueLoading] = useState<boolean>(true);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [venueButtonLoading, setVenueButtonLoading] = useState<boolean>(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null | undefined>(
+    null
+  );
+  const [deleteType, setDeleteType] = useState<"venue" | "course" | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -193,28 +202,39 @@ const AdminDashboard = () => {
   const handleDelete = async (event: React.MouseEvent<HTMLButtonElement>) => {
     const clickedButton = event.currentTarget;
 
-    const venueId = clickedButton.dataset.id;
+    const venueId: string | null | undefined = clickedButton.dataset.id;
 
-    if (!window.confirm("Delete this venue?")) return;
-
-    try {
-      await axiosClient.delete(`/api/admin/deleteVenue/${venueId}`);
-
-      setVenueData((prev) => prev.filter((venue) => venue._id !== venueId));
-    } catch (error) {
-      setMsg("Error in deleting venue");
-    }
+    setItemToDelete(venueId);
+    setDeleteType("venue");
+    setIsDeleteModalOpen(true);
   };
 
   const handleDeleteCourse = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this course?")) return;
+    setItemToDelete(id);
+    setDeleteType("course");
+    setIsDeleteModalOpen(true);
+  };
 
+  const confirmDelete = async () => {
+    if (!itemToDelete || !deleteType) return;
+
+    setIsDeleting(true);
     try {
-      await axiosClient.delete(`/api/admin/deleteCourse/${id}`);
+      if (deleteType === "venue") {
+        await axiosClient.delete(`/api/admin/deleteVenue/${itemToDelete}`);
+        setVenueData((prev) => prev.filter((v) => v._id !== itemToDelete));
+      } else if (deleteType === "course") {
+        await axiosClient.delete(`/api/admin/deleteCourse/${itemToDelete}`);
+        setCourseData((prev) => prev.filter((c) => c._id !== itemToDelete));
+      }
 
-      setCourseData((prev) => prev.filter((course) => course._id !== id));
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
+      setDeleteType(null);
     } catch (error) {
-      setMsg("Error in deleting course");
+      console.log("Delete failed", error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -366,6 +386,22 @@ const AdminDashboard = () => {
       socket.off("timetableUpdated", handleNewTimetable);
     };
   }, []);
+
+  const chartData = useMemo(() => {
+    const counts: { [key: string]: number } = {};
+    timetableData.forEach((event) => {
+      if (event.venue) {
+        const vName = event.venue.name;
+        counts[vName] = (counts[vName] || 0) + 1;
+      }
+    });
+    return Object.keys(counts)
+      .map((key) => ({
+        name: key,
+        allocations: counts[key],
+      }))
+      .sort((a, b) => b.allocations - a.allocations);
+  }, [timetableData]);
 
   const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
@@ -634,9 +670,66 @@ const AdminDashboard = () => {
           </div>
         </div>
 
+        <div className="bg-white shadow-md rounded-xl p-6 border border-gray-200">
+          <h2 className={headerClass}>
+            <FaChartBar className="text-blue-500" /> Venue Utilization
+          </h2>
+          <p className="text-sm text-gray-500 mb-6">
+            Visual analytics of venue allocation frequency.
+          </p>
+
+          {chartData.length > 0 ? (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                minHeight: "400px",
+              }}
+            >
+              <PieChart width={600} height={500}>
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: "8px",
+                    border: "none",
+                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                  }}
+                />
+                <Legend />
+                <Pie
+                  data={chartData}
+                  dataKey="allocations"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={200}
+                  fill="#4f46e5"
+                  label
+                >
+                  {chartData.map((_, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={index % 2 === 0 ? "#4f46e5" : "#6366f1"}
+                    />
+                  ))}
+                </Pie>
+              </PieChart>
+            </div>
+          ) : (
+            <div className="h-64 flex flex-col items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+              <p className="text-gray-400 font-medium">
+                No analytics available
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                Generate a timetable to view venue usage.
+              </p>
+            </div>
+          )}
+        </div>
+
         <div className={cardClass}>
-          <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
-            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+          <div className="flex flex-col gap-y-2 md:flex-row justify-between items-center mb-6 border-b border-gray-100 pb-4">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2">
               <FaCalendarAlt className="text-blue-600" /> Master Timetable
             </h2>
             <button
@@ -681,9 +774,11 @@ const AdminDashboard = () => {
                               <span className="text-xs font-bold text-gray-500">
                                 {event.startTime}:00 - {event.endTime}:00
                               </span>
-                              <span className="text-[10px] bg-gray-200 text-gray-700 px-1 rounded">
-                                {event.venue.name}
-                              </span>
+                              {event.venue && (
+                                <span className="text-[10px] bg-gray-200 text-gray-700 px-1 rounded">
+                                  {event.venue.name}
+                                </span>
+                              )}
                             </div>
                             <h4 className="font-bold text-gray-800 text-sm mt-1 leading-tight">
                               {event.course.title}
@@ -727,6 +822,18 @@ const AdminDashboard = () => {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setItemToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        isLoading={isDeleting}
+        title={deleteType === "venue" ? "Delete Venue?" : "Delete Course?"}
+        message={`Are you sure you want to remove this ${deleteType}? This action cannot be undone.`}
+      />
     </div>
   );
 };

@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import CourseModal from "../components/CourseModal";
 import PreferencesModal from "../components/PreferencesModal";
+import ConfirmModal from "../components/ConfirmModal";
 import {
   FaBookOpen,
   FaCalendarAlt,
@@ -27,10 +28,10 @@ interface timetableType {
   course: {
     title: string;
     code: string;
-  };
+  } | null;
   venue: {
     name: string;
-  };
+  } | null;
 }
 
 interface courseType {
@@ -148,6 +149,12 @@ const LecturerDashboard = () => {
     useState<boolean>(false);
   const [requestButtonLoading, setRequestButtonLoading] =
     useState<boolean>(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null | undefined>(
+    null
+  );
+  const [deleteType, setDeleteType] = useState<"venue" | "course" | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -344,16 +351,32 @@ const LecturerDashboard = () => {
   const handleDelete = async (event: React.MouseEvent<HTMLButtonElement>) => {
     const clickedButton = event.currentTarget;
 
-    const courseId = clickedButton.dataset.id;
+    const courseId: string | null | undefined = clickedButton.dataset.id;
 
-    if (!window.confirm("Are you sure you want to delete this course?")) return;
+    setItemToDelete(courseId);
+    setDeleteType("course");
+    setIsDeleteModalOpen(true);
+  };
 
+  const confirmDelete = async () => {
+    if (!itemToDelete || !deleteType) return;
+
+    setIsDeleting(true);
     try {
-      await axiosClient.delete(`/api/authentication/deleteCourse/${courseId}`);
+      if (deleteType === "course") {
+        await axiosClient.delete(
+          `/api/authentication/deleteCourse/${itemToDelete}`
+        );
+        setCourseData((prev) => prev.filter((c) => c._id !== itemToDelete));
+      }
 
-      setCourseData((prev) => prev.filter((course) => course._id !== courseId));
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
+      setDeleteType(null);
     } catch (error) {
-      console.log(error);
+      console.log("Delete failed", error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -500,9 +523,11 @@ const LecturerDashboard = () => {
     };
   }, []);
 
-  const myTimetable = timetableData.filter((entry) =>
-    courseData.some((myCourse) => myCourse.code === entry.course.code)
-  );
+  const myTimetable = timetableData.filter((entry) => {
+    if (!entry.course) return false;
+    const course = entry.course;
+    return courseData.some((myCourse) => myCourse.code === course.code);
+  });
 
   const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
@@ -1004,16 +1029,22 @@ const LecturerDashboard = () => {
                                   {event.startTime}:00 - {event.endTime}:00
                                 </span>
                               </div>
-                              <h4 className="font-bold text-gray-800 text-sm leading-tight">
-                                {event.course.title}
-                              </h4>
+                              {event.course && (
+                                <h4 className="font-bold text-gray-800 text-sm leading-tight">
+                                  {event.course.title}
+                                </h4>
+                              )}
                               <div className="flex justify-between items-center mt-2">
-                                <span className="text-xs text-indigo-600 font-semibold">
-                                  {event.course.code}
-                                </span>
-                                <span className="text-[10px] bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded border border-indigo-100">
-                                  {event.venue.name}
-                                </span>
+                                {event.course && (
+                                  <span className="text-xs text-indigo-600 font-semibold">
+                                    {event.course.code}
+                                  </span>
+                                )}
+                                {event.venue && (
+                                  <span className="text-[10px] bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded border border-indigo-100">
+                                    {event.venue.name}
+                                  </span>
+                                )}
                               </div>
                             </div>
                           ))
@@ -1083,6 +1114,18 @@ const LecturerDashboard = () => {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setItemToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        isLoading={isDeleting}
+        title={deleteType === "venue" ? "Delete Venue?" : "Delete Course?"}
+        message={`Are you sure you want to remove this ${deleteType}? This action cannot be undone.`}
+      />
     </div>
   );
 };
