@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import Course from "../models/Course.js";
+import Timetable from "../models/Timetable.js";
 import { AuthMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -350,6 +351,17 @@ router.delete("/deleteCourse/:id", AuthMiddleware, async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(404).json({ msg: "Error deleting course" });
+  }
+});
+
+router.get("/getTimetable", async (req, res) => {
+  try {
+    const timetable = await Timetable.find()
+      .populate("course", "title code")
+      .populate("venue", "name");
+    res.status(200).json({ timetable });
+  } catch (error) {
+    console.log(error);
   }
 });
 

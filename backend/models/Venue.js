@@ -5,8 +5,8 @@ const venueSchema = new mongoose.Schema({
   capacity: { type: String, required: true },
   type: {
     type: String,
-    enum: ["Lab", "Lecture Hall"],
-    default: "Lecture Hall",
+    enum: ["Lab", "Hall"],
+    default: "Hall",
   },
   resources: { type: [String], default: [] },
 });

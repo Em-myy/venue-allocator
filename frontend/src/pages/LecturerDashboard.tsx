@@ -7,14 +7,31 @@ import CourseModal from "../components/CourseModal";
 import PreferencesModal from "../components/PreferencesModal";
 import {
   FaBookOpen,
+  FaCalendarAlt,
+  FaCheckCircle,
   FaClock,
   FaEdit,
+  FaExclamationCircle,
   FaPlus,
   FaSignOutAlt,
   FaTimes,
   FaTrash,
   FaUserTie,
 } from "react-icons/fa";
+
+interface timetableType {
+  _id: string;
+  day: string;
+  startTime: number;
+  endTime: number;
+  course: {
+    title: string;
+    code: string;
+  };
+  venue: {
+    name: string;
+  };
+}
 
 interface courseType {
   code: string;
@@ -124,6 +141,13 @@ const LecturerDashboard = () => {
   const [preferenceEditShowMenu, setPreferenceEditShowMenu] =
     useState<boolean>(false);
   const [courseLoading, setCourseLoading] = useState<boolean>(true);
+  const [timetableData, setTimetableData] = useState<timetableType[]>([]);
+  const [courseButtonLoading, setCourseButtonLoading] =
+    useState<boolean>(false);
+  const [preferenceButtonLoading, setpreferenceButtonLoading] =
+    useState<boolean>(false);
+  const [requestButtonLoading, setRequestButtonLoading] =
+    useState<boolean>(false);
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -131,6 +155,7 @@ const LecturerDashboard = () => {
     event: React.ChangeEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
+    setRequestButtonLoading(true);
     try {
       const res = await axiosClient.post("/api/authentication/request", {
         reason,
@@ -143,8 +168,10 @@ const LecturerDashboard = () => {
         adminRequestStatus: "pending",
         adminRequestReason: reason,
       }));
+      setRequestButtonLoading(false);
     } catch (error) {
       console.log(error);
+      setRequestButtonLoading(false);
     }
   };
 
@@ -173,6 +200,7 @@ const LecturerDashboard = () => {
     event: React.ChangeEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
+    setCourseButtonLoading(true);
 
     try {
       const cleanedData = {
@@ -202,9 +230,10 @@ const LecturerDashboard = () => {
         requiredResources: null,
       });
 
-      console.log("Courses submitted successfully");
+      setCourseButtonLoading(false);
     } catch (error) {
       console.log(error);
+      setCourseButtonLoading(false);
     }
   };
 
@@ -237,6 +266,7 @@ const LecturerDashboard = () => {
     event: React.ChangeEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
+    setpreferenceButtonLoading(true);
 
     const formattedDays = preferencesForm.preferredDays.map((day) =>
       day.trim().toUpperCase()
@@ -266,8 +296,10 @@ const LecturerDashboard = () => {
       }
 
       setPreferencesForm({ preferredDays: [], preferredTimes: [] });
+      setpreferenceButtonLoading(false);
     } catch (error) {
       console.log(error);
+      setpreferenceButtonLoading(false);
     }
   };
 
@@ -447,6 +479,38 @@ const LecturerDashboard = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const getTimetable = async () => {
+      try {
+        const res = await axiosClient.get("/api/authentication/getTimetable");
+        setTimetableData(res.data.timetable || []);
+      } catch (error) {
+        console.log("Error fetching timetable", error);
+      }
+    };
+    getTimetable();
+
+    const handleNewTimetable = (newTimetable: timetableType) => {
+      setTimetableData((prev) => [...prev, newTimetable]);
+    };
+    socket.on("timetableUpdated", handleNewTimetable);
+
+    return () => {
+      socket.off("timetableUpdated", handleNewTimetable);
+    };
+  }, []);
+
+  const myTimetable = timetableData.filter((entry) =>
+    courseData.some((myCourse) => myCourse.code === entry.course.code)
+  );
+
+  const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+
+  const isExpanded =
+    userData.adminRequestStatus === "pending" ||
+    userData.adminRequestStatus === "approved" ||
+    userData.role === "admin";
+
   const inputClass =
     "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm";
   const labelClass =
@@ -513,13 +577,13 @@ const LecturerDashboard = () => {
                     </span>
                     <span
                       className={`font-semibold px-2 py-0.5 rounded text-xs uppercase 
-                        ${
-                          userData.adminRequestStatus === "approved"
-                            ? "bg-green-100 text-green-700"
-                            : userData.adminRequestStatus === "rejected"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-yellow-100 text-yellow-700"
-                        }`}
+                          ${
+                            userData.adminRequestStatus === "approved"
+                              ? "bg-green-100 text-green-700"
+                              : userData.adminRequestStatus === "rejected"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}
                     >
                       {userData.adminRequestStatus}
                     </span>
@@ -591,39 +655,7 @@ const LecturerDashboard = () => {
                 </div>
               )}
             </div>
-
-            {userData.adminRequestStatus !== "pending" &&
-              userData.adminRequestStatus !== "approved" && (
-                <div className={`${cardClass} bg-yellow-50 border-yellow-200`}>
-                  <h2 className="text-lg font-bold text-yellow-800 mb-2">
-                    Request Admin Access
-                  </h2>
-                  <form
-                    onSubmit={handleRequestSubmit}
-                    className="flex flex-col gap-2 "
-                  >
-                    <input
-                      type="text"
-                      className="flex-1 px-3 py-2 text-sm border border-yellow-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                      placeholder="Reason for request..."
-                      onChange={(e) => setReason(e.target.value)}
-                      value={reason}
-                      name="reason"
-                      required
-                    />
-                    <button className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition cursor-pointer">
-                      Send
-                    </button>
-                  </form>
-                  {msg && (
-                    <p className="text-xs text-green-600 mt-2 font-semibold">
-                      {msg}
-                    </p>
-                  )}
-                </div>
-              )}
           </div>
-
           <div className="lg:col-span-2 space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className={cardClass}>
@@ -702,8 +734,20 @@ const LecturerDashboard = () => {
                       className={inputClass}
                     />
                   </div>
-                  <button type="submit" className={buttonPrimary}>
-                    Add Course
+
+                  <button
+                    type="submit"
+                    disabled={courseButtonLoading}
+                    className={`${buttonPrimary}
+              ${
+                courseButtonLoading
+                  ? "bg-blue-300 cursor-not-allowed"
+                  : "cursor-pointer"
+              }`}
+                  >
+                    {courseButtonLoading
+                      ? "Success! Adding Course"
+                      : "Add Course"}
                   </button>
                 </form>
               </div>
@@ -756,89 +800,228 @@ const LecturerDashboard = () => {
                       Separate times with commas
                     </p>
                   </div>
+
                   <button
                     type="submit"
-                    className={`${buttonPrimary} bg-green-600 hover:bg-green-700`}
+                    disabled={preferenceButtonLoading}
+                    className={`${buttonPrimary} bg-green-600 hover:bg-green-700
+              ${
+                preferenceButtonLoading
+                  ? "bg-green-300 cursor-not-allowed"
+                  : "cursor-pointer"
+              }`}
                   >
-                    Update Preferences
+                    {preferenceButtonLoading
+                      ? "Success! Updating Preference"
+                      : "Update Preference"}
                   </button>
                 </form>
               </div>
             </div>
+          </div>
 
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                My Courses
-              </h2>
-
-              {courseLoading && (
-                <div className="text-center py-8 text-gray-500">
-                  Loading courses...
+          <div className="col-span-full w-full bg-white shadow-md rounded-xl p-6 border border-gray-100">
+            {!isExpanded ? (
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold text-yellow-800 flex items-center gap-2">
+                    <span className="bg-yellow-100 p-2 rounded-lg">
+                      <FaUserTie />
+                    </span>{" "}
+                    Request Admin Access
+                  </h2>
+                  <p className="text-gray-500 text-sm mt-1">
+                    Submit a request to become an administrator.
+                  </p>
                 </div>
-              )}
+                <form
+                  onSubmit={handleRequestSubmit}
+                  className="flex-1 w-full flex gap-3"
+                >
+                  <input
+                    type="text"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                    placeholder="Reason for request..."
+                    onChange={(e) => setReason(e.target.value)}
+                    value={reason}
+                    required
+                  />
 
-              {!courseLoading && courseData.length === 0 && (
-                <div className="bg-white border-2 border-dashed border-gray-300 rounded-xl p-12 text-center text-gray-400">
-                  <p>No courses added yet.</p>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {courseData.map((course) => (
-                  <div
-                    key={course._id}
-                    className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition duration-200 relative group"
+                  <button
+                    type="submit"
+                    disabled={requestButtonLoading}
+                    className={`bg-yellow-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-yellow-700 transition cursor-pointer
+              ${
+                requestButtonLoading
+                  ? "bg-yellow-300 cursor-not-allowed"
+                  : "cursor-pointer"
+              }`}
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">
-                          {course.code}
-                        </span>
-                        <h3 className="text-lg font-bold text-gray-800 mt-2 leading-tight">
-                          {course.title}
-                        </h3>
-                      </div>
+                    {requestButtonLoading
+                      ? "Success! Submitting Request"
+                      : "Submit Request"}
+                  </button>
+                </form>
+                {msg && <p className="text-green-600 font-semibold">{msg}</p>}
+              </div>
+            ) : (
+              <div
+                className={`flex items-center gap-4 p-4 rounded-lg border-l-4 
+                      ${
+                        userData.adminRequestStatus === "pending"
+                          ? "bg-yellow-50 border-yellow-400"
+                          : userData.adminRequestStatus === "approved"
+                          ? "bg-green-50 border-green-500"
+                          : "bg-red-50 border-red-500"
+                      }`}
+              >
+                <div className="text-2xl">
+                  {userData.adminRequestStatus === "pending" && (
+                    <FaExclamationCircle className="text-yellow-500" />
+                  )}
+                  {userData.adminRequestStatus === "approved" && (
+                    <FaCheckCircle className="text-green-500" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800 uppercase tracking-wide">
+                    Admin Request: {userData.adminRequestStatus}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Reason: "{userData.adminRequestReason}"
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
 
-                      <div className="text-right">
-                        <span className="block text-xl font-bold text-gray-700">
-                          {course.expectedStudents}
-                        </span>
-                        <span className="text-xs text-gray-400">Students</span>
-                      </div>
+          <div className="col-span-full w-full bg-white shadow-md rounded-xl p-6 border border-gray-100">
+            <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
+              <h2 className="text-2xl font-bold text-gray-800">My Courses</h2>
+              <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold">
+                {courseData.length} Courses
+              </span>
+            </div>
+
+            {courseLoading && (
+              <div className="text-center py-8 text-gray-500">
+                Loading courses...
+              </div>
+            )}
+            {!courseLoading && courseData.length === 0 && (
+              <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-12 text-center text-gray-400">
+                <p>No courses added yet.</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {courseData.map((course) => (
+                <div
+                  key={course._id}
+                  className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition duration-200 relative group"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">
+                        {course.code}
+                      </span>
+                      <h3 className="text-lg font-bold text-gray-800 mt-2 leading-tight">
+                        {course.title}
+                      </h3>
                     </div>
-
-                    <div className="text-sm text-gray-500 mt-3 space-y-1">
-                      <p>
-                        <strong className="text-gray-700">Duration:</strong>{" "}
-                        {course.duration} hours
-                      </p>
-                      <p>
-                        <strong className="text-gray-700">Resources:</strong>{" "}
-                        {course.requiredResources?.join(", ") || "None"}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-2">
-                        Lecturer: {course.lecturer.username}
-                      </p>
-                    </div>
-
-                    <div className="mt-4 pt-4 border-t border-gray-100 flex gap-3">
-                      <button
-                        data-id={course._id}
-                        onClick={handleEdit}
-                        className="flex-1 flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-700 py-2 rounded-lg text-sm font-semibold transition cursor-pointer"
-                      >
-                        <FaEdit /> Edit
-                      </button>
-                      <button
-                        data-id={course._id}
-                        onClick={handleDelete}
-                        className="flex-1 flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 py-2 rounded-lg text-sm font-semibold transition cursor-pointer"
-                      >
-                        <FaTrash /> Delete
-                      </button>
+                    <div className="text-right">
+                      <span className="block text-xl font-bold text-gray-700">
+                        {course.expectedStudents}
+                      </span>
+                      <span className="text-xs text-gray-400">Students</span>
                     </div>
                   </div>
-                ))}
+                  <div className="text-sm text-gray-500 mt-3 space-y-1">
+                    <p>
+                      <strong className="text-gray-700">Duration:</strong>{" "}
+                      {course.duration} hours
+                    </p>
+                    <p>
+                      <strong className="text-gray-700">Resources:</strong>{" "}
+                      {course.requiredResources?.join(", ") || "None"}
+                    </p>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-gray-100 flex gap-3">
+                    <button
+                      data-id={course._id}
+                      onClick={handleEdit}
+                      className="flex-1 flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-700 py-2 rounded-lg text-sm font-semibold transition cursor-pointer"
+                    >
+                      <FaEdit /> Edit
+                    </button>
+                    <button
+                      data-id={course._id}
+                      onClick={handleDelete}
+                      className="flex-1 flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 py-2 rounded-lg text-sm font-semibold transition cursor-pointer"
+                    >
+                      <FaTrash /> Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-8 col-span-full bg-white shadow-md rounded-xl p-6 border border-gray-100">
+            <div className="flex items-center gap-2 mb-6 border-b border-gray-100 pb-4">
+              <FaCalendarAlt className="text-blue-600" size={24} />
+              <h2 className="text-2xl font-bold text-gray-800">
+                My Teaching Schedule
+              </h2>
+            </div>
+
+            <div className="overflow-x-auto">
+              <div className="min-w-[800px] grid grid-cols-5 gap-4">
+                {daysOfWeek.map((day) => {
+                  const daysEvents = myTimetable
+                    .filter((t) => t.day.toLowerCase() === day.toLowerCase())
+                    .sort((a, b) => a.startTime - b.startTime);
+
+                  return (
+                    <div key={day} className="flex flex-col">
+                      <div className="bg-blue-600 text-white text-center py-2 rounded-t-lg font-bold uppercase text-sm tracking-wider">
+                        {day}
+                      </div>
+
+                      <div className="bg-blue-50 border border-blue-100 border-t-0 rounded-b-lg min-h-[250px] p-2 space-y-2">
+                        {daysEvents.length === 0 ? (
+                          <div className="text-center text-gray-400 text-xs mt-10 italic">
+                            No classes
+                          </div>
+                        ) : (
+                          daysEvents.map((event) => (
+                            <div
+                              key={event._id}
+                              className="bg-white border-l-4 border-indigo-500 shadow-sm rounded p-3 hover:shadow-md transition"
+                            >
+                              <div className="flex justify-between items-start mb-1">
+                                <span className="text-xs font-bold text-gray-500 bg-gray-100 px-1 rounded">
+                                  {event.startTime}:00 - {event.endTime}:00
+                                </span>
+                              </div>
+                              <h4 className="font-bold text-gray-800 text-sm leading-tight">
+                                {event.course.title}
+                              </h4>
+                              <div className="flex justify-between items-center mt-2">
+                                <span className="text-xs text-indigo-600 font-semibold">
+                                  {event.course.code}
+                                </span>
+                                <span className="text-[10px] bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded border border-indigo-100">
+                                  {event.venue.name}
+                                </span>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

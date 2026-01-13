@@ -92,6 +92,7 @@ const AdminDashboard = () => {
   const [editShowMenu, setEditShowMenu] = useState<boolean>(false);
   const [venueLoading, setVenueLoading] = useState<boolean>(true);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [venueButtonLoading, setVenueButtonLoading] = useState<boolean>(false);
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -134,6 +135,7 @@ const AdminDashboard = () => {
     event: React.ChangeEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
+    setVenueButtonLoading(true);
     try {
       await axiosClient.post("/api/admin/createVenue", formData);
 
@@ -143,8 +145,10 @@ const AdminDashboard = () => {
         type: "",
         resources: [],
       });
+      setVenueButtonLoading(false);
     } catch (error) {
       setMsg("Error in adding venue");
+      setVenueButtonLoading(false);
     }
   };
 
@@ -498,8 +502,19 @@ const AdminDashboard = () => {
                     className={inputClass}
                   />
                 </div>
-                <button className="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 rounded-lg transition shadow-md cursor-pointer">
-                  Create Venue
+
+                <button
+                  disabled={venueButtonLoading}
+                  className={`w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 rounded-lg transition shadow-md
+              ${
+                venueButtonLoading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "cursor-pointer"
+              }`}
+                >
+                  {venueButtonLoading
+                    ? "Success! Creating Venue"
+                    : "Create Venue"}
                 </button>
               </form>
             </div>
