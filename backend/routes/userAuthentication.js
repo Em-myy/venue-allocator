@@ -93,7 +93,7 @@ router.post("/login", async (req, res) => {
 });
 
 router.get("/profile", AuthMiddleware, async (req, res) => {
-  const lecturerId = req.user.id;
+  const lecturerId = req.user._id;
 
   const user = await User.findById(lecturerId);
 
@@ -134,8 +134,8 @@ router.post("/refresh", async (req, res) => {
       role: user.role,
       adminRequestStatus: user.adminRequestStatus,
       adminRequestReason: user.adminRequestReason,
-      preferredDays: user.preferences.preferredDays,
-      preferredTimes: user.preferences.preferredTimes,
+      preferredDays: user.preferences?.preferredDays || [],
+      preferredTimes: user.preferences?.preferredTimes || [],
     });
   } catch (error) {
     console.log(error);
@@ -293,23 +293,19 @@ router.get("/getCourses", AuthMiddleware, async (req, res) => {
       "lecturer",
       "username"
     );
-
-    if (!courses || courses.length === 0) {
-      return res.status(401).json({ msg: "No courses found" });
-    }
-
-    res.status(201).json({ courses });
+    res.status(200).json({ courses });
   } catch (error) {
     console.log(error);
+    res.status(500).json({ msg: "Error fetching courses" });
   }
 });
 
 router.get("/courseDetails/:id", AuthMiddleware, async (req, res) => {
   const id = req.params.id;
   try {
-    const course = await Course.findById(id);
+    const course = await Course.findById(id).populate("lecturer", "username");
 
-    res.status(201).json({ course });
+    res.status(200).json({ course });
   } catch (error) {
     console.log(error);
     res.status(404).json({ msg: "Course not found" });
@@ -354,31 +350,39 @@ router.delete("/deleteCourse/:id", AuthMiddleware, async (req, res) => {
   }
 });
 
-router.get("/getTimetable", async (req, res) => {
+router.get("/getTimetable", AuthMiddleware, async (req, res) => {
   try {
-    const timetable = await Timetable.find()
+    const lecturerId = req.user._id;
+
+    // First get all courses for this lecturer
+    const courses = await Course.find({ lecturer: lecturerId });
+    const courseIds = courses.map((c) => c._id);
+
+    // Then get timetables for only those courses
+    const timetable = await Timetable.find({ course: { $in: courseIds } })
       .populate("course", "title code")
       .populate("venue", "name");
+
     res.status(200).json({ timetable });
   } catch (error) {
     console.log(error);
+    res.status(500).json({ msg: "Error fetching timetable" });
   }
 });
 
-router.post("/logout", async (req, res) => {
+router.post("/logout", (req, res) => {
   res.clearCookie("accessToken", {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
   });
-
   res.clearCookie("refreshToken", {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
   });
 
-  res.status(201).json({ msg: "User logged out successfully" });
+  res.json({ msg: "Logged out successfully" });
 });
 
 export default router;

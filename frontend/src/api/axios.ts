@@ -24,7 +24,6 @@ axiosClient.interceptors.response.use(
 
         return axiosClient(originalRequest);
       } catch (refreshError) {
-        console.log("Refresh Error.... Logging out now");
         return Promise.reject(refreshError);
       }
     }

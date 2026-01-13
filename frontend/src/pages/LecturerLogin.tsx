@@ -35,7 +35,7 @@ const LecturerLogin = () => {
         navigate("/lecturerDashboard");
       }, 3000);
     } catch (error) {
-      setMsg("Error In registering user");
+      setMsg("Error In logging in");
       setIsLoading(false);
     }
   };

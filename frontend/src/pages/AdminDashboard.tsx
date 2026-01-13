@@ -608,7 +608,7 @@ const AdminDashboard = () => {
                 <FaChalkboardTeacher className="text-gray-500" /> Submitted
                 Courses
               </h2>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto custom-scrollbar pb-2">
                 <table className="min-w-full text-left text-sm whitespace-nowrap">
                   <thead className="uppercase tracking-wider border-b-2 border-gray-200 bg-gray-50 text-gray-600 font-bold">
                     <tr>
@@ -617,6 +617,7 @@ const AdminDashboard = () => {
                       <th className="px-4 py-3">Students</th>
                       <th className="px-4 py-3">Duration</th>
                       <th className="px-4 py-3">Lecturer</th>
+                      <th className="px-4 py-3">Required Resources</th>
                       <th className="px-4 py-3 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -650,6 +651,9 @@ const AdminDashboard = () => {
                           </td>
                           <td className="px-4 py-3 text-gray-500 italic">
                             {course.lecturer?.username}
+                          </td>
+                          <td className="px-4 py-3 text-gray-500 italic">
+                            {course.requiredResources?.join(", ")}
                           </td>
                           <td className="px-4 py-3 text-right">
                             <button
@@ -746,7 +750,7 @@ const AdminDashboard = () => {
             </button>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto custom-scrollbar">
             <div className="min-w-[800px] grid grid-cols-5 gap-4">
               {daysOfWeek.map((day) => {
                 const daysEvents = timetableData

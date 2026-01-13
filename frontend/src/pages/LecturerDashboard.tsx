@@ -459,7 +459,6 @@ const LecturerDashboard = () => {
       try {
         setCourseLoading(true);
         const res = await axiosClient.get("/api/authentication/getCourses");
-
         setCourseData(res.data.courses || []);
       } catch (error) {
         console.log(error);
@@ -1000,7 +999,7 @@ const LecturerDashboard = () => {
               </h2>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto custom-scrollbar">
               <div className="min-w-[800px] grid grid-cols-5 gap-4">
                 {daysOfWeek.map((day) => {
                   const daysEvents = myTimetable

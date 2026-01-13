@@ -1,1 +1,19 @@
 @import "tailwindcss";
+
+.custom-scrollbar::-webkit-scrollbar {
+  height: 8px; /* Height for horizontal scrollbar */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9; /* Light gray track matching bg-gray-50 */
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1; /* Darker gray handle */
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8; /* Darkens on hover */
+}
