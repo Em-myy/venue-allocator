@@ -48,7 +48,9 @@ router.post("/register", async (req, res) => {
       path: "/",
     });
 
-    res.status(200).json({ msg: "Registration Successful" });
+    res
+      .status(200)
+      .json({ msg: "Registration Successful", accessToken, refreshToken });
   } catch (error) {
     res.status(404).json({ msg: "Error registering user" });
   }
@@ -120,7 +122,12 @@ router.get("/profile", AuthMiddleware, async (req, res) => {
 });
 
 router.post("/refresh", async (req, res) => {
-  const refreshToken = req.cookies.refreshToken;
+  let refreshToken = req.cookies.refreshToken;
+
+  // If cookie is not found, check the request body
+  if (!refreshToken && req.body.refreshToken) {
+    refreshToken = req.body.refreshToken;
+  }
 
   if (!refreshToken) return res.status(401).json({ msg: "Logged out" });
 
