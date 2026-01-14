@@ -643,7 +643,7 @@ const AdminDashboard = () => {
                         <p className="font-bold text-gray-800 text-sm">
                           Resources - {venue.resources.join(", ")}
                         </p>
-                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-2 opacity-100 transition-opacity">
                           <button
                             data-id={venue._id}
                             onClick={handleEdit}
@@ -906,7 +906,7 @@ const AdminDashboard = () => {
                             </p>
                             <button
                               onClick={() => handleDeallocateCourse(event._id)}
-                              className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 bg-red-100 text-red-600 p-1 rounded text-xs hover:bg-red-200 transition cursor-pointer"
+                              className="absolute top-10 right-1 opacity-100 bg-red-100 text-red-600 p-1 rounded text-xs hover:bg-red-200 transition cursor-pointer"
                               title="Remove allocation"
                             >
                               <FaTrash size={10} />
