@@ -35,13 +35,15 @@ router.post("/register", async (req, res) => {
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
       maxAge: 15 * 60 * 1000,
       path: "/",
     });
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: "/",
     });
@@ -74,14 +76,16 @@ router.post("/login", async (req, res) => {
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
       maxAge: 15 * 60 * 1000,
       path: "/",
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: "/",
     });
@@ -123,7 +127,8 @@ router.post("/refresh", async (req, res) => {
 
     res.cookie("accessToken", newAccessToken, {
       httpOnly: true,
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
       maxAge: 15 * 60 * 1000,
       path: "/",
     });
@@ -371,12 +376,14 @@ router.get("/getTimetable", AuthMiddleware, async (req, res) => {
 router.post("/logout", (req, res) => {
   res.clearCookie("accessToken", {
     httpOnly: true,
-    sameSite: "lax",
+    secure: true,
+    sameSite: "none",
     path: "/",
   });
   res.clearCookie("refreshToken", {
     httpOnly: true,
-    sameSite: "lax",
+    secure: true,
+    sameSite: "none",
     path: "/",
   });
 
