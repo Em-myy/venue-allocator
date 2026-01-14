@@ -57,6 +57,11 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ msg: "Please provide both email and password" });
+    }
 
     const user = await User.findOne({ email });
 
@@ -90,7 +95,9 @@ router.post("/login", async (req, res) => {
       path: "/",
     });
 
-    res.status(200).json({ msg: "Login Successful" });
+    res
+      .status(200)
+      .json({ msg: "Login Successful", accessToken, refreshToken });
   } catch (error) {
     res.status(404).json({ msg: "Error Logging in" });
   }
@@ -134,6 +141,7 @@ router.post("/refresh", async (req, res) => {
     });
 
     res.json({
+      accessToken: newAccessToken,
       _id: user._id,
       name: user.username,
       role: user.role,

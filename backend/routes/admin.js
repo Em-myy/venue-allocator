@@ -113,7 +113,13 @@ router.post("/register", async (req, res) => {
       path: "/",
     });
 
-    res.status(201).json({ msg: "Admin registration successful" });
+    res
+      .status(201)
+      .json({
+        msg: "Admin registration successful",
+        accessToken,
+        refreshToken,
+      });
   } catch (error) {
     console.log(error);
   }
