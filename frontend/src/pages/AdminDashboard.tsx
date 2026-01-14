@@ -120,6 +120,12 @@ const AdminDashboard = () => {
   );
   const [deleteType, setDeleteType] = useState<"venue" | "course" | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [unallocatedCourses, setUnallocatedCourses] = useState<courseType[]>(
+    []
+  );
+  const [allocatingCourseId, setAllocatingCourseId] = useState<string | null>(
+    null
+  );
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -185,6 +191,14 @@ const AdminDashboard = () => {
       const res = await axiosClient.get("/api/admin/generate");
       if (res.data.generated) {
         setTimetableData(res.data.generated);
+
+        const allocatedCourseIds = res.data.generated.map(
+          (t: any) => t.course._id
+        );
+        const unallocated = courseData.filter(
+          (c) => !allocatedCourseIds.includes(c._id)
+        );
+        setUnallocatedCourses(unallocated);
       } else {
         const refresh = await axiosClient.get("/api/admin/getTimetable");
         setTimetableData(refresh.data.timetable);
@@ -253,6 +267,33 @@ const AdminDashboard = () => {
       console.log("Delete failed", error);
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleAllocateCourse = async (courseId: string) => {
+    setAllocatingCourseId(courseId);
+    try {
+      const res = await axiosClient.post(
+        `/api/admin/allocateCourse/${courseId}`
+      );
+      setMsg(res.data.msg);
+      // Remove from unallocated
+      setUnallocatedCourses((prev) => prev.filter((c) => c._id !== courseId));
+    } catch (error: any) {
+      setMsg(error.response?.data?.msg || "Error allocating course");
+    } finally {
+      setAllocatingCourseId(null);
+    }
+  };
+
+  const handleDeallocateCourse = async (timetableId: string) => {
+    try {
+      const res = await axiosClient.delete(
+        `/api/admin/deallocateCourse/${timetableId}`
+      );
+      setMsg(res.data.msg);
+    } catch (error) {
+      setMsg("Error deallocating course");
     }
   };
 
@@ -394,14 +435,26 @@ const AdminDashboard = () => {
     };
     handleTimetable();
 
-    const handleNewTimetable = async (newTimetable: timetableType) => {
-      setTimetableData((prevTimetable) => [...prevTimetable, newTimetable]);
+    const handleNewTimetable = (data: any) => {
+      if (Array.isArray(data)) {
+        setTimetableData(data);
+      } else if (data.timetable && Array.isArray(data.timetable)) {
+        setTimetableData(data.timetable);
+      } else {
+        setTimetableData((prev) => [...prev, data]);
+      }
+    };
+
+    const handleDeallocatedCourse = (data: any) => {
+      setTimetableData((prev) => prev.filter((t) => t._id !== data._id));
     };
 
     socket.on("timetableUpdated", handleNewTimetable);
+    socket.on("timetableDeallocated", handleDeallocatedCourse);
 
     return () => {
       socket.off("timetableUpdated", handleNewTimetable);
+      socket.off("timetableDeallocated", handleDeallocatedCourse);
     };
   }, []);
 
@@ -752,6 +805,53 @@ const AdminDashboard = () => {
           )}
         </div>
 
+        {unallocatedCourses.length > 0 && (
+          <div className="bg-orange-50 border-l-4 border-orange-400 p-6 rounded-r-lg shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-orange-800">
+                Unallocated Courses ({unallocatedCourses.length})
+              </h2>
+              <p className="text-sm text-orange-600">
+                Click the + button to allocate courses manually
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {unallocatedCourses.map((course) => (
+                <div
+                  key={course._id}
+                  className="bg-white p-4 rounded-lg shadow-sm border border-orange-200 flex justify-between items-center hover:shadow-md transition"
+                >
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-800 text-sm">
+                      {course.code}
+                    </p>
+                    <p className="text-xs text-gray-600 mt-1">{course.title}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Lecturer: {course.lecturer?.username}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleAllocateCourse(course._id)}
+                    disabled={allocatingCourseId === course._id}
+                    className={`ml-2 p-2 rounded transition cursor-pointer ${
+                      allocatingCourseId === course._id
+                        ? "bg-gray-300 cursor-not-allowed"
+                        : "bg-blue-100 text-blue-600 hover:bg-blue-200"
+                    }`}
+                    title="Allocate course"
+                  >
+                    {allocatingCourseId === course._id ? (
+                      <span className="text-xs">...</span>
+                    ) : (
+                      <FaPlus size={16} />
+                    )}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className={cardClass}>
           <div className="flex flex-col gap-y-2 md:flex-row justify-between items-center mb-6 border-b border-gray-100 pb-4">
             <h2 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2">
@@ -795,7 +895,7 @@ const AdminDashboard = () => {
                         daysEvents.map((event) => (
                           <div
                             key={event._id}
-                            className="bg-white border-l-4 border-blue-500 shadow-sm rounded p-2 hover:shadow-md transition"
+                            className="bg-white border-l-4 border-blue-500 shadow-sm rounded p-2 hover:shadow-md transition group relative"
                           >
                             <div className="flex justify-between items-start">
                               <span className="text-xs font-bold text-gray-500">
@@ -813,6 +913,13 @@ const AdminDashboard = () => {
                             <p className="text-xs text-blue-600 font-semibold">
                               {event.course.code}
                             </p>
+                            <button
+                              onClick={() => handleDeallocateCourse(event._id)}
+                              className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 bg-red-100 text-red-600 p-1 rounded text-xs hover:bg-red-200 transition cursor-pointer"
+                              title="Remove allocation"
+                            >
+                              <FaTrash size={10} />
+                            </button>
                           </div>
                         ))
                       )}

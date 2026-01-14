@@ -1,9 +1,11 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import { AuthMiddleware } from "../middleware/authMiddleware.js";
-import { GenerateTimetable } from "../controller/allocationController.js";
+import {
+  GenerateTimetable,
+  AllocateSingleCourse,
+} from "../controller/allocationController.js";
 import User from "../models/User.js";
-import bcrypt from "bcryptjs";
 import Course from "../models/Course.js";
 import Venue from "../models/Venue.js";
 import Timetable from "../models/Timetable.js";
@@ -254,5 +256,53 @@ router.get("/getTimetable", async (req, res) => {
     console.log(error);
   }
 });
+
+router.post("/allocateCourse/:courseId", AuthMiddleware, async (req, res) => {
+  try {
+    const courseId = req.params.courseId;
+
+    const existingSchedule = await Timetable.find();
+
+    const allocation = await AllocateSingleCourse(courseId, existingSchedule);
+
+    const timetableEntry = new Timetable(allocation);
+    await timetableEntry.save();
+
+    await timetableEntry.populate("course", "title code");
+    await timetableEntry.populate("venue", "name");
+
+    req.io.emit("timetableUpdated", timetableEntry);
+
+    res.status(201).json({
+      msg: "Course allocated successfully",
+      timetableEntry,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({ msg: error.message || "Error allocating course" });
+  }
+});
+
+router.delete(
+  "/deallocateCourse/:timetableId",
+  AuthMiddleware,
+  async (req, res) => {
+    try {
+      const timetableId = req.params.timetableId;
+
+      const timetable = await Timetable.findByIdAndDelete(timetableId);
+      if (!timetable) {
+        return res.status(404).json({ msg: "Timetable entry not found" });
+      }
+
+      req.io.emit("timetableDeallocated", timetable);
+
+      res.status(200).json({ msg: "Course deallocated successfully" });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ msg: "Error deallocating course" });
+    }
+  }
+);
 
 export default router;

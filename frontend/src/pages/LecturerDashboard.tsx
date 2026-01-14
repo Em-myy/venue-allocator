@@ -520,10 +520,17 @@ const LecturerDashboard = () => {
         setTimetableData((prev) => [...prev, data]);
       }
     };
+
+    const handleDeallocatedCourse = (data: any) => {
+      setTimetableData((prev) => prev.filter((t) => t._id !== data._id));
+    };
+
     socket.on("timetableUpdated", handleNewTimetable);
+    socket.on("timetableDeallocated", handleDeallocatedCourse);
 
     return () => {
       socket.off("timetableUpdated", handleNewTimetable);
+      socket.off("timetableDeallocated", handleDeallocatedCourse);
     };
   }, []);
 

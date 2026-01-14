@@ -2,14 +2,7 @@ import Course from "../models/Course.js";
 import Timetable from "../models/Timetable.js";
 import Venue from "../models/Venue.js";
 
-const DAYS = [
-  "MONDAY",
-  "TUESDAY",
-  "WEDNESDAY",
-  "THURSDAY",
-  "FRIDAY",
-  "SATURDAY",
-];
+const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 const TIME_SLOTS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
 
 const isFeasible = (course, venue, day, time, currentSchedule) => {
@@ -154,6 +147,54 @@ export const GenerateTimetable = async (req, res) => {
     return {
       generated: populatedTimetable,
       unallocated: unallocated,
+    };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const AllocateSingleCourse = async (courseId, existingSchedule) => {
+  try {
+    const course = await Course.findById(courseId).populate("lecturer");
+    if (!course) {
+      throw new Error("Course not found");
+    }
+
+    const venues = await Venue.find();
+    if (venues.length === 0) {
+      throw new Error("No venues available");
+    }
+
+    let bestSlot = null;
+    let maxScore = -Infinity;
+
+    for (const day of DAYS) {
+      for (const time of TIME_SLOTS) {
+        for (const venue of venues) {
+          if (isFeasible(course, venue, day, time, existingSchedule)) {
+            const score = calculateScore(course, venue, day, time);
+
+            if (score > maxScore) {
+              maxScore = score;
+              bestSlot = { venue, day, time };
+            }
+          }
+        }
+      }
+    }
+
+    if (!bestSlot) {
+      throw new Error("Could not find available slot for this course");
+    }
+
+    return {
+      course: course._id,
+      venue: bestSlot.venue._id,
+      lecturerId: course.lecturer._id,
+      day: bestSlot.day,
+      startTime: bestSlot.time,
+      endTime: bestSlot.time + course.duration,
     };
   } catch (error) {
     console.log(error);
