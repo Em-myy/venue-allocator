@@ -7,6 +7,17 @@ const axiosClient = axios.create({
   withCredentials: true,
 });
 
+axiosClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 axiosClient.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -20,10 +31,18 @@ axiosClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        await axiosClient.post("/api/authentication/refresh");
+        const refreshToken = localStorage.getItem("refreshToken");
+        const { data } = await axiosClient.post("/api/authentication/refresh", {
+          refreshToken,
+        });
 
+        localStorage.setItem("accessToken", data.accessToken);
+
+        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
         return axiosClient(originalRequest);
       } catch (refreshError) {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
         return Promise.reject(refreshError);
       }
     }

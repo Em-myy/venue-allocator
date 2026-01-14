@@ -2,7 +2,17 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
 export const AuthMiddleware = async (req, res, next) => {
-  const token = req.cookies.accessToken;
+  let token = req.cookies.accessToken;
+
+  // If cookie is missing, check the Authorization header (Bearer token)
+  if (
+    !token &&
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    // Format is "Bearer <token>"
+    token = req.headers.authorization.split(" ")[1];
+  }
 
   if (!token) return res.status(401).json({ msg: "Invalid Credentials" });
 

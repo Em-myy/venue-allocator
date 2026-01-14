@@ -47,7 +47,13 @@ export const AuthProvider = ({ children }: AuthProviderType) => {
         setUser(res.data);
       } catch {
         try {
-          const res2 = await axiosClient.post("/api/authentication/refresh");
+          // Try refreshing with the token from localStorage (for mobile)
+          const refreshToken = localStorage.getItem("refreshToken");
+          const res2 = await axiosClient.post("/api/authentication/refresh", {
+            refreshToken,
+          });
+
+          localStorage.setItem("accessToken", res2.data.accessToken);
           setUser(res2.data);
         } catch {
           setUser(null);
@@ -74,7 +80,15 @@ export const AuthProvider = ({ children }: AuthProviderType) => {
   }, []);
 
   const login = async (email: string, password: string): Promise<userType> => {
-    await axiosClient.post("/api/authentication/login", { email, password });
+    const res = await axiosClient.post("/api/authentication/login", {
+      email,
+      password,
+    });
+
+    // 1. Save tokens to LocalStorage
+    localStorage.setItem("accessToken", res.data.accessToken);
+    localStorage.setItem("refreshToken", res.data.refreshToken);
+
     const userRes = await axiosClient.get("/api/authentication/profile");
 
     setUser(userRes.data);
@@ -85,6 +99,8 @@ export const AuthProvider = ({ children }: AuthProviderType) => {
 
   const logout = async () => {
     await axiosClient.post("/api/authentication/logout");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     setUser(null);
     setIsLoggedOut(true);
   };
