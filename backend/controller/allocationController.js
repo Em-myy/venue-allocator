@@ -133,7 +133,7 @@ export const GenerateTimetable = async (req, res) => {
           endTime: bestSlot.time + course.duration,
         });
       } else {
-        unallocated.push(course.code);
+        unallocated.push(course);
       }
     }
 

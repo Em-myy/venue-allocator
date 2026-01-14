@@ -38,7 +38,7 @@ const AdminLogin = () => {
         navigate("/adminDashboard");
       }, 3000);
     } catch (error) {
-      setMsg("Error In registering user");
+      setMsg("Error in logging in");
       setIsLoading(false);
     }
   };

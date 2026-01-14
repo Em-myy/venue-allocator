@@ -191,17 +191,8 @@ const AdminDashboard = () => {
       const res = await axiosClient.get("/api/admin/generate");
       if (res.data.generated) {
         setTimetableData(res.data.generated);
-
-        const allocatedCourseIds = res.data.generated.map(
-          (t: any) => t.course._id
-        );
-        const unallocated = courseData.filter(
-          (c) => !allocatedCourseIds.includes(c._id)
-        );
-        setUnallocatedCourses(unallocated);
       } else {
-        const refresh = await axiosClient.get("/api/admin/getTimetable");
-        setTimetableData(refresh.data.timetable);
+        setUnallocatedCourses(res.data.unallocated || []);
       }
     } catch (error) {
       setMsg("Error in creating timetable");
@@ -807,7 +798,7 @@ const AdminDashboard = () => {
 
         {unallocatedCourses.length > 0 && (
           <div className="bg-orange-50 border-l-4 border-orange-400 p-6 rounded-r-lg shadow-sm">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col md:flex-row items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-orange-800">
                 Unallocated Courses ({unallocatedCourses.length})
               </h2>
