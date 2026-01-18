@@ -11,6 +11,11 @@ const courseSchema = new mongoose.Schema({
   },
   duration: { type: Number, default: 1 },
   requiredResources: { type: [String], default: [] },
+  venueType: {
+    type: String,
+    enum: ["Laboratory", "Lecture Hall"],
+    default: "Lecture Hall",
+  },
 });
 
 export default mongoose.model("Course", courseSchema);

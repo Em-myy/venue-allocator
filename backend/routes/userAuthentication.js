@@ -274,8 +274,14 @@ router.patch("/editPreferences", AuthMiddleware, async (req, res) => {
 
 router.post("/submitCourses", AuthMiddleware, async (req, res) => {
   try {
-    const { code, title, expectedStudents, duration, requiredResources } =
-      req.body;
+    const {
+      code,
+      title,
+      expectedStudents,
+      duration,
+      requiredResources,
+      venueType,
+    } = req.body;
 
     const existingCourse = await Course.findOne({ code });
 
@@ -291,6 +297,7 @@ router.post("/submitCourses", AuthMiddleware, async (req, res) => {
       expectedStudents,
       duration,
       requiredResources,
+      venueType,
       lecturer: lecturerId,
     });
     await course.save();

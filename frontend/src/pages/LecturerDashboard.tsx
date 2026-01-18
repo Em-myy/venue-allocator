@@ -40,6 +40,7 @@ interface courseType {
   expectedStudents: number | null;
   duration: number | null;
   requiredResources: string[] | null;
+  venueType: "Laboratory" | "Lecture Hall";
 }
 
 interface courseDetails {
@@ -49,6 +50,7 @@ interface courseDetails {
   expectedStudents: number | null;
   duration: number | null;
   requiredResources: string[] | null;
+  venueType: "Laboratory" | "Lecture Hall";
 }
 
 interface courseDetail {
@@ -61,6 +63,7 @@ interface courseDetail {
   lecturer: {
     username: string;
   };
+  venueType: "Laboratory" | "Lecture Hall";
 }
 
 interface userType {
@@ -112,6 +115,7 @@ const LecturerDashboard = () => {
     expectedStudents: null,
     duration: null,
     requiredResources: null,
+    venueType: "Lecture Hall",
   });
   const [userData, setUserData] = useState<userType>({
     _id: "",
@@ -137,6 +141,7 @@ const LecturerDashboard = () => {
     expectedStudents: null,
     duration: null,
     requiredResources: null,
+    venueType: "Lecture Hall",
   });
   const [editShowMenu, setEditShowMenu] = useState<boolean>(false);
   const [preferenceEditShowMenu, setPreferenceEditShowMenu] =
@@ -235,6 +240,7 @@ const LecturerDashboard = () => {
         expectedStudents: null,
         duration: null,
         requiredResources: null,
+        venueType: "Lecture Hall",
       });
 
       setCourseButtonLoading(false);
@@ -326,6 +332,7 @@ const LecturerDashboard = () => {
         expectedStudents: res.data.course.expectedStudents,
         duration: res.data.course.duration,
         requiredResources: res.data.course.requiredResources,
+        venueType: res.data.course.venueType,
       });
       setEditShowMenu(true);
     } catch (error) {
@@ -753,6 +760,7 @@ const LecturerDashboard = () => {
                       required
                     />
                   </div>
+
                   <div>
                     <label className={labelClass}>
                       Resources (Comma separated)
@@ -769,6 +777,26 @@ const LecturerDashboard = () => {
                       onChange={handleResourcesChange}
                       className={inputClass}
                     />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Venue Type</label>
+                    <select
+                      name="venueType"
+                      value={formData.venueType}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          venueType: e.target.value as
+                            | "Laboratory"
+                            | "Lecture Hall",
+                        })
+                      }
+                      className={`cursor-pointer ${inputClass}`}
+                      required
+                    >
+                      <option value="Lecture Hall">Lecture Hall</option>
+                      <option value="Laboratory">Laboratory</option>
+                    </select>
                   </div>
 
                   <button
@@ -980,6 +1008,10 @@ const LecturerDashboard = () => {
                     <p>
                       <strong className="text-gray-700">Resources:</strong>{" "}
                       {course.requiredResources?.join(", ") || "None"}
+                    </p>
+                    <p>
+                      <strong className="text-gray-700">Venue Type:</strong>{" "}
+                      {course.venueType}
                     </p>
                   </div>
                   <div className="mt-4 pt-4 border-t border-gray-100 flex gap-3">

@@ -5,7 +5,7 @@ interface venueType {
   _id: string;
   name: string;
   capacity: string;
-  type: string;
+  type: "Laboratory" | "Lecture Hall";
   resources: string[];
 }
 
@@ -19,7 +19,7 @@ const VenueModal: React.FC<Props> = ({ venueDetails, closeModal }) => {
     _id: "",
     name: "",
     capacity: "",
-    type: "",
+    type: "Lecture Hall",
     resources: [],
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -105,16 +105,22 @@ const VenueModal: React.FC<Props> = ({ venueDetails, closeModal }) => {
           </div>
 
           <div>
-            <label className={labelClass}>Type</label>
-            <input
-              type="text"
-              placeholder="Lab, Hall, Room..."
-              name="type"
+            <label className={labelClass}>Venue Type</label>
+            <select
+              name="venueType"
               value={formData.type}
-              onChange={handleFormChange}
-              className={inputClass}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  type: e.target.value as "Laboratory" | "Lecture Hall",
+                })
+              }
+              className={`cursor-pointer ${inputClass}`}
               required
-            />
+            >
+              <option value="Lecture Hall">Lecture Hall</option>
+              <option value="Laboratory">Laboratory</option>
+            </select>
           </div>
         </div>
 

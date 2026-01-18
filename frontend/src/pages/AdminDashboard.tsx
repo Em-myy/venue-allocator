@@ -37,20 +37,21 @@ interface courseType {
   lecturer: {
     username: string;
   };
+  venueType: "Laboratory" | "Lecture Hall";
 }
 
 interface venueType {
   _id: string;
   name: string;
   capacity: string;
-  type: string;
+  type: "Laboratory" | "Lecture Hall";
   resources: string[];
 }
 
 interface FormType {
   name: string;
   capacity: string;
-  type: string;
+  type: "Laboratory" | "Lecture Hall";
   resources: string[];
 }
 
@@ -97,7 +98,7 @@ const AdminDashboard = () => {
   const [formData, setFormData] = useState<FormType>({
     name: "",
     capacity: "",
-    type: "",
+    type: "Lecture Hall",
     resources: [],
   });
   const [venueData, setVenueData] = useState<venueType[]>([]);
@@ -106,7 +107,7 @@ const AdminDashboard = () => {
     _id: "",
     name: "",
     capacity: "",
-    type: "",
+    type: "Lecture Hall",
     resources: [],
   });
 
@@ -175,7 +176,7 @@ const AdminDashboard = () => {
       setFormData({
         name: "",
         capacity: "",
-        type: "",
+        type: "Lecture Hall",
         resources: [],
       });
       setVenueButtonLoading(false);
@@ -577,16 +578,22 @@ const AdminDashboard = () => {
                     />
                   </div>
                   <div>
-                    <label className={labelClass}>Type</label>
-                    <input
-                      type="text"
-                      placeholder="Lab/Hall"
-                      name="type"
+                    <label className={labelClass}>Venue Type</label>
+                    <select
+                      name="venueType"
                       value={formData.type}
-                      onChange={handleFormChange}
-                      className={inputClass}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          type: e.target.value as "Laboratory" | "Lecture Hall",
+                        })
+                      }
+                      className={`cursor-pointer ${inputClass}`}
                       required
-                    />
+                    >
+                      <option value="Lecture Hall">Lecture Hall</option>
+                      <option value="Laboratory">Laboratory</option>
+                    </select>
                   </div>
                 </div>
                 <div>
@@ -682,7 +689,9 @@ const AdminDashboard = () => {
                       <th className="px-4 py-3">Students</th>
                       <th className="px-4 py-3">Duration</th>
                       <th className="px-4 py-3">Lecturer</th>
+                      <th className="px-4 py-3">Venue Type</th>
                       <th className="px-4 py-3">Resources</th>
+
                       <th className="px-4 py-3 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -716,6 +725,9 @@ const AdminDashboard = () => {
                           </td>
                           <td className="px-4 py-3 text-gray-500 italic">
                             {course.lecturer?.username}
+                          </td>
+                          <td className="px-4 py-3 text-gray-500 italic">
+                            {course.venueType}
                           </td>
                           <td className="px-4 py-3 text-gray-500 italic">
                             {course.requiredResources?.join(", ")}
@@ -899,10 +911,10 @@ const AdminDashboard = () => {
                               )}
                             </div>
                             <h4 className="font-bold text-gray-800 text-sm mt-1 leading-tight">
-                              {event.course.title}
+                              {event.course?.title}
                             </h4>
                             <p className="text-xs text-blue-600 font-semibold">
-                              {event.course.code}
+                              {event.course?.code}
                             </p>
                             <button
                               onClick={() => handleDeallocateCourse(event._id)}

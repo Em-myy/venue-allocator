@@ -8,6 +8,7 @@ interface courseType {
   expectedStudents: number | null;
   duration: number | null;
   requiredResources: string[] | null;
+  venueType: "Laboratory" | "Lecture Hall";
 }
 
 type Props = {
@@ -23,6 +24,7 @@ const CourseModal: React.FC<Props> = ({ courseDetails, closeModal }) => {
     expectedStudents: null,
     duration: null,
     requiredResources: null,
+    venueType: "Lecture Hall",
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [msg, setMsg] = useState<string>("");
@@ -76,6 +78,7 @@ const CourseModal: React.FC<Props> = ({ courseDetails, closeModal }) => {
       duration: courseDetails.duration,
       expectedStudents: courseDetails.expectedStudents,
       requiredResources: courseDetails.requiredResources,
+      venueType: courseDetails.venueType,
     });
   }, [courseDetails]);
 
@@ -160,6 +163,24 @@ const CourseModal: React.FC<Props> = ({ courseDetails, closeModal }) => {
           <p className="text-[10px] text-gray-400 mt-1">
             Separate multiple items with commas.
           </p>
+        </div>
+        <div>
+          <label className={labelClass}>Venue Type</label>
+          <select
+            name="venueType"
+            value={formData.venueType}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                venueType: e.target.value as "Laboratory" | "Lecture Hall",
+              })
+            }
+            className={`cursor-pointer ${inputClass}`}
+            required
+          >
+            <option value="Lecture Hall">Lecture Hall</option>
+            <option value="Laboratory">Laboratory</option>
+          </select>
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-6">
