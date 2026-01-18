@@ -5,8 +5,31 @@ import Venue from "../models/Venue.js";
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 const TIME_SLOTS = [8, 9, 10, 11, 12, 13, 14, 15, 16];
 
+const WEIGHTS = {
+  LECTURER_PREF_TIME: 2000, // Big bonus if lecturer gets their time
+  LECTURER_PREF_DAY: 1500, // Bonus for preferred day
+  VENUE_UTILIZATION: 1000, // Bonus for filling a room to capacity (0-1000)
+  RESOURCE_WASTE: -300, // Penalty for using a Lab for a normal lecture
+  CROWDING_PENALTY: -50, // Penalty for busy slots (spreads classes out)
+  SAME_DAY_LOAD: -50, // Penalty if venue is used too much in one day
+};
+
+const getId = (field) => {
+  if (!field) return null;
+  if (typeof field === "string") return field;
+  if (field._id) return field._id.toString();
+  return field.toString();
+};
+
 const isFeasible = (course, venue, day, time, currentSchedule) => {
-  if (course.expectedStudents > venue.capacity) {
+  if (course.expectedStudents > Number(venue.capacity)) {
+    return false;
+  }
+
+  const DAY_START = 8;
+  const DAY_END = 18;
+
+  if (time < DAY_START || time + course.duration > DAY_END) {
     return false;
   }
 
@@ -16,7 +39,7 @@ const isFeasible = (course, venue, day, time, currentSchedule) => {
 
   if (course.requiredResources && course.requiredResources.length > 0) {
     const hadAllResources = course.requiredResources.every((req) =>
-      venue.resources.includes(req)
+      venue.resources.includes(req),
     );
 
     if (!hadAllResources) {
@@ -28,9 +51,13 @@ const isFeasible = (course, venue, day, time, currentSchedule) => {
   const newEnd = time + course.duration;
 
   const venueBusy = currentSchedule.some((t) => {
-    if (t.venue.toString() !== venue._id.toString() || t.day !== day) {
-      return false;
-    }
+    const slotVenueId = getId(t.venue);
+    const venueId = getId(venue);
+
+    if (!slotVenueId || !venueId || t.day !== day) return false;
+
+    // Only block if it is the SAME venue
+    if (slotVenueId !== venueId) return false;
 
     return t.startTime < newEnd && t.endTime > newStart;
   });
@@ -44,12 +71,12 @@ const isFeasible = (course, venue, day, time, currentSchedule) => {
   }
 
   const lecturerBusy = currentSchedule.some((t) => {
-    if (
-      t.lecturerId.toString() !== course.lecturer._id.toString() ||
-      t.day !== day
-    ) {
-      return false;
-    }
+    const slotLecturerId = getId(t.lecturerId || t.lecturer);
+    const lecturerId = getId(course.lecturer);
+
+    if (!slotLecturerId || !lecturerId || t.day !== day) return false;
+    if (slotLecturerId !== lecturerId) return false; // Only check this lecturer
+
     return t.startTime < newEnd && t.endTime > newStart;
   });
 
@@ -57,39 +84,77 @@ const isFeasible = (course, venue, day, time, currentSchedule) => {
     return false;
   }
 
-  const lecturer = course.lecturer;
+  const lecturerNeedsBreak = currentSchedule.some((t) => {
+    const slotLecturerId = getId(t.lecturerId || t.lecturer);
+    const lecturerId = getId(course.lecturer);
 
-  if (lecturer.preferences?.preferredDays?.length) {
-    if (!lecturer.preferences.preferredDays.includes(day)) {
-      return false;
-    }
-  }
+    if (!slotLecturerId || !lecturerId || t.day !== day) return false;
+    if (slotLecturerId !== lecturerId) return false;
+
+    // Check if the new class starts exactly when an existing one ends (or vice versa)
+    const endsWhenNewStarts = t.endTime === newStart;
+    const startsWhenNewEnds = t.startTime === newEnd;
+
+    return endsWhenNewStarts || startsWhenNewEnds;
+  });
+
+  if (lecturerNeedsBreak) return false;
 
   return true;
 };
 
-const calculateScore = (course, venue, day, time) => {
+const getVenueLoad = (venueId, day, schedule) => {
+  return schedule.filter(
+    (t) => getId(t.venue) === getId(venueId) && t.day === day,
+  ).length;
+};
+
+const calculateScore = (course, venue, day, time, schedule) => {
   let score = 0;
   const normalizeTime = (t) => parseInt(t.split(":")[0], 10);
   const lecturer = course.lecturer;
 
+  // 1. Lecturer Preferences (Time)
   if (
     lecturer.preferences?.preferredTimes?.some((t) => normalizeTime(t) === time)
   ) {
-    score += 1000;
+    score += WEIGHTS.LECTURER_PREF_TIME;
   }
 
+  // 2. Lecturer Preferences (Day)
+  if (
+    lecturer.preferences?.preferredDays?.length &&
+    lecturer.preferences.preferredDays.includes(day)
+  ) {
+    score += WEIGHTS.LECTURER_PREF_DAY;
+  }
+
+  // 3. Venue Utilization
   if (venue.capacity > 0) {
     const utilization = course.expectedStudents / venue.capacity;
-    score += utilization * 100;
+    score += utilization * WEIGHTS.VENUE_UTILIZATION;
   }
 
+  // 4. Resource Waste (Penalty)
   if (
     venue.resources.length > 0 &&
-    (!course.requiredResources || course.requiredResources.length > 0)
+    (!course.requiredResources || course.requiredResources.length === 0)
   ) {
-    score -= 5;
+    score += WEIGHTS.RESOURCE_WASTE;
   }
+
+  // 5. Crowding Penalty (FIXED)
+  // We use subtraction (-) to prefer quieter time slots
+  const parallelVenueLoad = schedule.filter(
+    (t) => t.day === day && t.startTime === time,
+  ).length;
+
+  score += parallelVenueLoad * WEIGHTS.CROWDING_PENALTY;
+
+  // 6. Venue Load Balance
+  // Penalize a venue if it is already heavily booked on this day
+  const venueLoad = getVenueLoad(venue._id, day, schedule);
+  score += venueLoad * WEIGHTS.SAME_DAY_LOAD;
 
   return score;
 };
@@ -110,7 +175,7 @@ export const GenerateTimetable = async (req, res) => {
     let unallocated = [];
 
     courses.sort(
-      (a, b) => (b.expectedStudents || 0) - (a.expectedStudents || 0)
+      (a, b) => (b.expectedStudents || 0) - (a.expectedStudents || 0),
     );
 
     for (const course of courses) {
@@ -121,7 +186,7 @@ export const GenerateTimetable = async (req, res) => {
         for (const time of TIME_SLOTS) {
           for (const venue of venues) {
             if (isFeasible(course, venue, day, time, schedule)) {
-              const score = calculateScore(course, venue, day, time);
+              const score = calculateScore(course, venue, day, time, schedule);
 
               if (score > maxScore) {
                 maxScore = score;
@@ -182,7 +247,13 @@ export const AllocateSingleCourse = async (courseId, existingSchedule) => {
       for (const time of TIME_SLOTS) {
         for (const venue of venues) {
           if (isFeasible(course, venue, day, time, existingSchedule)) {
-            const score = calculateScore(course, venue, day, time);
+            const score = calculateScore(
+              course,
+              venue,
+              day,
+              time,
+              existingSchedule,
+            );
 
             if (score > maxScore) {
               maxScore = score;
