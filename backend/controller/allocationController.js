@@ -3,7 +3,7 @@ import Timetable from "../models/Timetable.js";
 import Venue from "../models/Venue.js";
 
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
-const TIME_SLOTS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+const TIME_SLOTS = [8, 9, 10, 11, 12, 13, 14, 15, 16];
 
 const isFeasible = (course, venue, day, time, currentSchedule) => {
   if (course.expectedStudents > venue.capacity) {
@@ -41,7 +41,7 @@ const isFeasible = (course, venue, day, time, currentSchedule) => {
 
   const lecturerBusy = currentSchedule.some((t) => {
     if (
-      t.lecturerId.toString() !== course.lecturer._id.toString() &&
+      t.lecturerId.toString() !== course.lecturer._id.toString() ||
       t.day !== day
     ) {
       return false;
@@ -53,21 +53,25 @@ const isFeasible = (course, venue, day, time, currentSchedule) => {
     return false;
   }
 
+  const lecturer = course.lecturer;
+
+  if (lecturer.preferences?.preferredDays?.length) {
+    if (!lecturer.preferences.preferredDays.includes(day)) {
+      return false;
+    }
+  }
+
+  if (lecturer.preferences?.preferredTimes?.length) {
+    if (!lecturer.preferences.preferredTimes.includes(time.toString())) {
+      return false;
+    }
+  }
+
   return true;
 };
 
 const calculateScore = (course, venue, day, time) => {
   let score = 0;
-
-  const lecturer = course.lecturer;
-
-  if (lecturer.preferences?.preferredDays?.includes(day)) {
-    score += 20;
-  }
-
-  if (lecturer.preferences?.preferredTimes?.includes(time.toString())) {
-    score += 10;
-  }
 
   if (venue.capacity > 0) {
     const utilization = course.expectedStudents / venue.capacity;
