@@ -61,17 +61,25 @@ const isFeasible = (course, venue, day, time, currentSchedule) => {
     }
   }
 
-  if (lecturer.preferences?.preferredTimes?.length) {
-    if (!lecturer.preferences.preferredTimes.includes(time.toString())) {
-      return false;
-    }
-  }
-
   return true;
 };
 
 const calculateScore = (course, venue, day, time) => {
   let score = 0;
+
+  const lecturer = course.lecturer;
+
+  if (lecturer.preferences?.preferredTimes?.includes(time.toString())) {
+    score += 100;
+  }
+
+  const previous = currentSchedule.find(
+    (t) => t.lecturerId.toString() === lecturer._id.toString() && t.day === day
+  );
+
+  if (previous && previous.endTime === time) {
+    score += 50;
+  }
 
   if (venue.capacity > 0) {
     const utilization = course.expectedStudents / venue.capacity;
