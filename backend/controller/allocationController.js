@@ -66,24 +66,18 @@ const isFeasible = (course, venue, day, time, currentSchedule) => {
 
 const calculateScore = (course, venue, day, time) => {
   let score = 0;
-
+  const normalizeTime = (t) => parseInt(t.split(":")[0], 10);
   const lecturer = course.lecturer;
 
-  if (lecturer.preferences?.preferredTimes?.includes(time.toString())) {
-    score += 100;
-  }
-
-  const previous = currentSchedule.find(
-    (t) => t.lecturerId.toString() === lecturer._id.toString() && t.day === day
-  );
-
-  if (previous && previous.endTime === time) {
-    score += 50;
+  if (
+    lecturer.preferences?.preferredTimes?.some((t) => normalizeTime(t) === time)
+  ) {
+    score += 1000;
   }
 
   if (venue.capacity > 0) {
     const utilization = course.expectedStudents / venue.capacity;
-    score += utilization * 50;
+    score += utilization * 100;
   }
 
   if (
@@ -93,7 +87,6 @@ const calculateScore = (course, venue, day, time) => {
     score -= 5;
   }
 
-  score += Math.random();
   return score;
 };
 
