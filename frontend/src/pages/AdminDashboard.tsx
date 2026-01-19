@@ -117,15 +117,15 @@ const AdminDashboard = () => {
   const [venueButtonLoading, setVenueButtonLoading] = useState<boolean>(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null | undefined>(
-    null
+    null,
   );
   const [deleteType, setDeleteType] = useState<"venue" | "course" | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [unallocatedCourses, setUnallocatedCourses] = useState<courseType[]>(
-    []
+    [],
   );
   const [allocatingCourseId, setAllocatingCourseId] = useState<string | null>(
-    null
+    null,
   );
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -153,7 +153,7 @@ const AdminDashboard = () => {
   };
 
   const handleResourcesChange = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const val = event.target.value;
 
@@ -166,7 +166,7 @@ const AdminDashboard = () => {
   };
 
   const handleFormSubmit = async (
-    event: React.ChangeEvent<HTMLFormElement>
+    event: React.ChangeEvent<HTMLFormElement>,
   ) => {
     event.preventDefault();
     setVenueButtonLoading(true);
@@ -266,7 +266,7 @@ const AdminDashboard = () => {
     setAllocatingCourseId(courseId);
     try {
       const res = await axiosClient.post(
-        `/api/admin/allocateCourse/${courseId}`
+        `/api/admin/allocateCourse/${courseId}`,
       );
       setMsg(res.data.msg);
       // Remove from unallocated
@@ -281,7 +281,7 @@ const AdminDashboard = () => {
   const handleDeallocateCourse = async (timetableId: string) => {
     try {
       const res = await axiosClient.delete(
-        `/api/admin/deallocateCourse/${timetableId}`
+        `/api/admin/deallocateCourse/${timetableId}`,
       );
       setMsg(res.data.msg);
     } catch (error) {
@@ -312,13 +312,13 @@ const AdminDashboard = () => {
 
     socket.on("adminApproved", (updatedData) => {
       setCandidateData((prev) =>
-        prev.filter((req) => req._id !== updatedData.userId)
+        prev.filter((req) => req._id !== updatedData.userId),
       );
     });
 
     socket.on("adminRejected", (deletedData) => {
       setCandidateData((prev) =>
-        prev.filter((req) => req._id !== deletedData.userId)
+        prev.filter((req) => req._id !== deletedData.userId),
       );
     });
 
@@ -347,15 +347,15 @@ const AdminDashboard = () => {
     const handleUpdatedCourse = (updatedCourse: courseType) => {
       setCourseData((prevCourses) =>
         prevCourses.map((c) =>
-          c._id === updatedCourse._id ? updatedCourse : c
-        )
+          c._id === updatedCourse._id ? updatedCourse : c,
+        ),
       );
     };
 
     const handleDeletedCourse = (deletedCourse: courseType) => {
       if (deletedCourse && deletedCourse._id) {
         setCourseData((prev) =>
-          prev.filter((req) => req._id !== deletedCourse._id)
+          prev.filter((req) => req._id !== deletedCourse._id),
         );
       }
     };
@@ -393,14 +393,14 @@ const AdminDashboard = () => {
 
     const handleUpdatedVenue = (updatedVenue: venueType) => {
       setVenueData((prevVenues) =>
-        prevVenues.map((v) => (v._id === updatedVenue._id ? updatedVenue : v))
+        prevVenues.map((v) => (v._id === updatedVenue._id ? updatedVenue : v)),
       );
     };
 
     const handleDeletedVenue = (deletedVenue: venueType) => {
       if (deletedVenue && deletedVenue._id) {
         setVenueData((prev) =>
-          prev.filter((req) => req._id !== deletedVenue._id)
+          prev.filter((req) => req._id !== deletedVenue._id),
         );
       }
     };
@@ -545,8 +545,8 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full overflow-hidden">
+          <div className="lg:col-span-1 space-y-6 min-w-0">
             <div className={cardClass}>
               <h2 className={headerClass}>
                 <FaPlus className="text-gray-500" /> Add Venue
@@ -674,13 +674,13 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          <div className="lg:col-span-2">
-            <div className={`${cardClass} h-full`}>
+          <div className="lg:col-span-2 min-w-0">
+            <div className={`${cardClass} h-full overflow-hidden`}>
               <h2 className={headerClass}>
                 <FaChalkboardTeacher className="text-gray-500" /> Submitted
-                Courses
+                Courses ({courseData.length})
               </h2>
-              <div className="overflow-x-auto custom-scrollbar pb-2">
+              <div className="overflow-x-auto custom-scrollbar pb-2 -mx-6 px-6">
                 <table className="min-w-full text-left text-sm whitespace-nowrap">
                   <thead className="uppercase tracking-wider border-b-2 border-gray-200 bg-gray-50 text-gray-600 font-bold">
                     <tr>
@@ -761,14 +761,15 @@ const AdminDashboard = () => {
 
           {chartData.length > 0 ? (
             <div
+              className="w-full overflow-x-auto flex justify-center items-center"
               style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
                 minHeight: "400px",
               }}
             >
-              <PieChart width={600} height={500}>
+              <PieChart
+                width={Math.min(600, Math.max(300, window.innerWidth - 80))}
+                height={400}
+              >
                 <Tooltip
                   contentStyle={{
                     borderRadius: "8px",
@@ -783,7 +784,10 @@ const AdminDashboard = () => {
                   nameKey="name"
                   cx="50%"
                   cy="50%"
-                  outerRadius={200}
+                  outerRadius={Math.min(
+                    200,
+                    Math.max(80, window.innerWidth / 8),
+                  )}
                   fill="#4f46e5"
                   label
                 >
@@ -879,7 +883,7 @@ const AdminDashboard = () => {
               {daysOfWeek.map((day) => {
                 const daysEvents = timetableData
                   .filter(
-                    (t) => t.day && t.day.toLowerCase() === day.toLowerCase()
+                    (t) => t.day && t.day.toLowerCase() === day.toLowerCase(),
                   )
                   .sort((a, b) => a.startTime - b.startTime);
 
