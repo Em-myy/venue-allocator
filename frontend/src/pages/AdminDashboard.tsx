@@ -785,7 +785,7 @@ const AdminDashboard = () => {
                   cx="50%"
                   cy="50%"
                   outerRadius={Math.min(
-                    200,
+                    170,
                     Math.max(80, window.innerWidth / 8),
                   )}
                   fill="#4f46e5"
